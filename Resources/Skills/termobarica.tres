@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "termobarica"
+display_name = "Termobárica"
+description = "Sus impactos queman: 4 de daño/s durante 3 s."
+emoji = "🔥"
+rarity = 1
+specialty_id = "granadero"
+modifiers = {"burn_dps": 4.0}

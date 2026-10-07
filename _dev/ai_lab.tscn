@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://_dev/ai_lab.gd" id="1"]
+
+[node name="AiLab" type="Node"]
+script = ExtResource("1")

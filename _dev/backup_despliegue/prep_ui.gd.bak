@@ -1,0 +1,57 @@
+extends CanvasLayer
+## Cabecera de la fase de planificación: banner y botón de combate.
+## La gestión del ejército vive en troop_roster_ui.gd y troop_detail_panel.gd.
+
+@onready var start_button: Button = $Control/StartButton
+
+var _refresh_pending: bool = false
+
+
+func _ready() -> void:
+	start_button.pressed.connect(_on_start_button_pressed)
+	
+	var bus = get_node_or_null("/root/EventBus")
+	if bus:
+		bus.battle_fight_started.connect(_on_battle_fight_started)
+		bus.roster_changed.connect(_request_update)
+	
+	get_tree().node_added.connect(_on_tree_changed)
+	get_tree().node_removed.connect(_on_tree_changed)
+	_request_update()
+
+
+func _on_tree_changed(node: Node) -> void:
+	if node.is_in_group("troops") or node is CharacterBody2D:
+		_request_update()
+
+
+func _request_update() -> void:
+	if _refresh_pending:
+		return
+	_refresh_pending = true
+	call_deferred("_update_start_button")
+
+
+func _update_start_button() -> void:
+	_refresh_pending = false
+	# La llamada diferida puede llegar cuando la escena de batalla ya ha salido del árbol (cambio de escena)
+	if not is_inside_tree():
+		return
+	var deployed: int = 0
+	for troop in get_tree().get_nodes_in_group("troops"):
+		if is_instance_valid(troop) and not troop.is_queued_for_deletion() \
+				and troop.team == troop.Team.PLAYER and not troop.has_meta("is_drag_preview"):
+			deployed += 1
+	start_button.disabled = (deployed == 0)
+	start_button.tooltip_text = "" if deployed > 0 else "Despliega al menos una tropa para combatir"
+
+
+func _on_battle_fight_started() -> void:
+	hide()
+	queue_free()
+
+
+func _on_start_button_pressed() -> void:
+	var bus = get_node_or_null("/root/EventBus")
+	if bus:
+		bus.battle_fight_started.emit()

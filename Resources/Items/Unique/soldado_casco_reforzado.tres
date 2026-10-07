@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/item_data.gd" id="1_item_data"]
+
+[resource]
+script = ExtResource("1_item_data")
+id = "soldado_casco_reforzado"
+display_name = "Casco Reforzado"
+description = "+20 Salud Máxima"
+rarity = 0
+health_bonus = 20.0
+damage_bonus = 0.0
+speed_bonus = 0.0
+range_bonus = 0.0
+crit_chance_bonus = 0.0

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpecialtyData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/specialty_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "medico"
+display_name = "Doctor"
+emoji = "🩺"
+color = Color(0.95, 0.45, 0.5, 1)
+affine_families = Array[int]([0])
+description = "Mantiene vivo al pelotón. Afín a pistolas. Cuanto más cerca de sus compañeros, mejor."
+passive_name = "Primeros auxilios y Estabilizar"
+passive_description = "Cada 4 s cura un 6 % de la vida al aliado más herido a 220 px. Una vez por combate, si un aliado cercano iba a caer, lo estabiliza: queda en pie y recupera un 25 %."
+passive_effect_id = "primeros_auxilios"
+passive_params = {"interval": 4.0, "heal_pct": 0.06, "radius": 220.0}
+modifiers = {}
+extra_effects = {"estabilizar": {"radius": 220.0, "heal_pct": 0.25}}
+synergy_text = "Colócalo detrás de tu primera línea (cuchillo, escopeta): los mantiene vivos el doble."

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/weapon_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "cuchillo"
+display_name = "Cuchillo"
+emoji = "🔪"
+family = 6
+rarity = 0
+description = "Cuerpo a cuerpo. Muy certero y rápido corriendo, pero hay que llegar."
+damage = 11.0
+fire_rate = 1.4
+attack_range = 40.0
+accuracy = 0.95
+optimal_range = 40.0
+accuracy_falloff = 0.0
+magazine = 0
+reload_time = 0.0
+crit_chance = 0.15
+crit_multiplier = 2.0
+projectile = 4
+projectile_speed = 0.0
+min_round = 1
+fire_on_move = true
+move_speed_mult = 1.3

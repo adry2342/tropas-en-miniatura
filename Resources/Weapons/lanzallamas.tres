@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/weapon_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "lanzallamas"
+display_name = "Lanzallamas"
+emoji = "🔥"
+family = 4
+rarity = 1
+description = "Chorro corto que quema: 4 de daño/s durante 3 s."
+damage = 3.0
+fire_rate = 6.0
+attack_range = 130.0
+accuracy = 0.9
+optimal_range = 110.0
+accuracy_falloff = 0.3
+magazine = 30
+reload_time = 3.0
+crit_chance = 0.0
+crit_multiplier = 1.5
+burn_dps = 4.0
+burn_duration = 3.0
+projectile = 3
+projectile_speed = 420.0
+min_round = 4
+fire_on_move = true
+move_speed_mult = 0.9

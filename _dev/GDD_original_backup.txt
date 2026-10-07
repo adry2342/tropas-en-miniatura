@@ -1,0 +1,117 @@
+🎮 Estructura general del proyecto
+Tu juego puede dividirse en tres grandes bloques:
+Interfaz / Flujo general del juego (UI y escenas)
+Lógica del juego (sistemas, combate, progresión, etc.)
+Contenido (niveles, tropas, habilidades, objetos, etc.)
+Dentro de esos bloques, hay apartados más concretos que te detallo a continuación 👇
+🧩 1. Escenas principales del juego
+Estas son las pantallas o escenas clave que debes tener y conectar entre sí:
+🟢 1.1 Pantalla de carga / inicio
+Logo o nombre del juego.
+Botones principales:
+Start → te lleva al menú de selección de run o al mapa de niveles.
+Opciones → ajustes del juego.
+Salir → cierra el juego.
+Consejo: hazlo como una Control scene en Godot (UI pura).
+⚙️ 1.2 Menú de opciones
+Ajustes de:
+Volumen general, música y efectos.
+Resolución o modo ventana/pantalla completa.
+Idioma (opcional).
+Guardar configuración en un archivo JSON.
+🧭 1.3 Selección de run / ejército inicial
+Aquí eliges tu tipo de tropa inicial (soldado, médico, vehículo, especialista).
+Muestra estadísticas básicas y descripción de cada tipo.
+Botón de “Comenzar Run” → genera la partida roguelite.
+🗺️ 1.4 Mapa o selector de niveles
+Se muestra un mapa con rutas ramificadas (por ejemplo: “nivel con más dinero arriba / nivel con más objetos raros abajo”).
+Cada nodo representa una batalla o evento.
+Al completar un nodo, se desbloquean los caminos siguientes.
+Se genera aleatoriamente cada run (roguelike).
+⚔️ 1.5 Escena de combate
+Es el corazón del juego.
+Características clave:
+El jugador posiciona sus tropas antes del inicio.
+Las tropas luego se mueven y atacan automáticamente (como en TFT o MiniTroopers).
+Cada ataque tiene probabilidades de impacto crítico en distintas partes (cabeza, corazón, pulmones, etc.).
+Los enemigos se generan de forma aleatoria con dificultad creciente.
+Aquí se controlan:
+Animaciones, IA básica, turnos o tiempo real.
+Cálculos de daño, precisión, salud, experiencia.
+🎁 1.6 Pantalla de recompensas
+Al terminar una batalla:
+Se muestran objetos obtenidos (comunes, épicos, legendarios).
+El jugador elige una mejora o habilidad para sus tropas.
+El sistema usa una tabla de probabilidad según rareza.
+Guarda los resultados (por ejemplo, el ejército actual y mejoras).
+🏆 1.7 Pantalla de jefe final
+Similar a la escena de combate, pero con enemigos especiales.
+Al ganar:
+Se guarda el ejército como “vencedor de run”.
+Si completas tres runs, desbloqueas el “ejército definitivo”.
+🔁 1.8 Pantalla de loop infinito (modo supervivencia)
+Modo “infinito” desbloqueado al terminar las tres runs.
+Enemigos infinitos con dificultad progresiva.
+Ranking online, no sé cómo hacerlo pero Flow megabonk.
+💾 1.9 Sistema de guardado y carga
+Guarda:
+Ejército actual (tropas, niveles, objetos).
+Run actual y progreso de mapa.
+Ajustes del jugador.
+Puedes usar FileAccess o ConfigFile en Godot.
+⚙️ 2. Sistemas principales del juego
+Estos son los subsistemas que controlan la lógica interna:
+🧠 2.1 Sistema de tropas
+Clase base Troop.gd con atributos:
+Vida, ataque, defensa, precisión, movilidad.
+Tipo (soldado, médico, vehículo, especialista).
+Nivel y experiencia.
+Lista de objetos y habilidades.
+Subclases o scripts específicos:
+Soldier.gd, Medic.gd, Driver.gd, Sniper.gd.
+💥 2.2 Sistema de combate automático
+Controla la lógica de batalla sin intervención directa:
+Movimiento automático hacia enemigos.
+Prioridad de objetivos.
+Probabilidades de acierto crítico.
+Animaciones de impacto, muerte, curación, etc.
+🧱 2.3 Sistema de objetos y mejoras
+Cada objeto tiene:
+Tipo (genérico o específico de clase).
+Rareza (común, rara, épica, legendaria).
+Efecto (aumento de daño, vida, precisión…).
+Gestionar con un diccionario global o JSON de objetos.
+🌀 2.4 Sistema roguelite / progresión
+Cada run genera:
+Mapa aleatorio.
+Enemigos escalados por nivel.
+Recompensas distintas.
+Guardar progreso y tropas entre runs.
+📈 2.5 Sistema de experiencia y niveles
+Cada tropa gana XP por:
+Matar enemigos.
+Superar niveles.
+Subida de nivel → elegir habilidad o recibir objeto.
+🎨 3. Aspectos visuales y técnicos
+3.1 Arte
+Sprites 2D simples para personajes y vehículos.
+Fondo parallax o estático.
+Efectos visuales para disparos, impactos, curaciones.
+3.2 Audio
+Música de menú, combate, victoria, derrota.
+Efectos de disparo, explosión, curación.
+3.3 UI / HUD
+Barra de vida sobre cada unidad.
+Indicadores de habilidades activas.
+Menú de pausa y botones de volver / continuar.
+🧩 4. Orden recomendado de desarrollo
+Para que no se te haga montaña, sigue este orden:
+Pantalla de inicio + menú de opciones.
+Pantalla de selección de tropa inicial.
+Mapa básico de niveles (solo dos caminos al principio).
+Escena de combate con dos tropas enfrentadas.
+Sistema de combate automático básico.
+Sistema de experiencia y recompensas.
+Guardado de progreso y tropas.
+Añadir jefe final y loop infinito.
+Pulir UI, efectos visuales y balance.

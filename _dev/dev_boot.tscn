@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://hdm8ik7j5sxc"]
+
+[ext_resource type="Script" path="res://_dev/dev_boot.gd" id="1_yg30k"]
+
+[node name="DevBoot" type="Node" unique_id=1581294114]
+script = ExtResource("1_yg30k")

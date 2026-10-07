@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/item_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "botiquin"
+display_name = "Botiquín"
+description = "Una vez por combate, por debajo del 40 % de vida, se cura un 35 %."
+emoji = "🩹"
+rarity = 0
+slot = 2
+effect_id = "botiquin"
+params = {"threshold": 0.4, "heal_pct": 0.35}

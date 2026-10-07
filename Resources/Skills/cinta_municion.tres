@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "cinta_municion"
+display_name = "Cinta de munición"
+description = "+20 % de cadencia."
+emoji = "🎗️"
+rarity = 0
+specialty_id = "municionero"
+modifiers = {"fire_rate_pct": 0.2}

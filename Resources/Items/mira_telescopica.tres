@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/item_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "mira_telescopica"
+display_name = "Mira telescópica"
+description = "+15 % de alcance, +8 % de precisión y +6 % de crítico."
+emoji = "🔭"
+rarity = 0
+slot = 2
+modifiers = {"range_pct": 0.15, "accuracy": 0.08, "crit_chance": 0.06}

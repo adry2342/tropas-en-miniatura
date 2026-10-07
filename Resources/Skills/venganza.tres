@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "venganza"
+display_name = "Venganza"
+description = "+30 % de cadencia durante 4 s cuando cae un aliado."
+emoji = "😡"
+rarity = 1
+specialty_id = ""
+effect_id = "venganza"
+params = {"fire_rate_pct": 0.3, "duration": 4.0}

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/weapon_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "fusil_asalto"
+display_name = "Fusil de asalto"
+emoji = "⚔️"
+family = 1
+rarity = 0
+description = "Equilibrado a media distancia; de cerca gana precisión."
+damage = 7.0
+fire_rate = 2.2
+attack_range = 340.0
+accuracy = 0.78
+optimal_range = 200.0
+accuracy_falloff = 0.12
+magazine = 15
+reload_time = 2.0
+crit_chance = 0.05
+crit_multiplier = 1.8
+projectile_speed = 750.0
+recruit_pool = true
+min_round = 1
+close_bonus = 0.14
+fire_on_move = true

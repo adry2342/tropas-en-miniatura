@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/weapon_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "bazuca"
+display_name = "Bazuca"
+emoji = "🚀"
+family = 5
+rarity = 2
+description = "Cohete de largo alcance: daño fuerte en radio 75 (menos en el borde). Lenta y pesada."
+damage = 70.0
+fire_rate = 0.5
+attack_range = 500.0
+accuracy = 0.72
+optimal_range = 400.0
+accuracy_falloff = 0.08
+magazine = 1
+reload_time = 3.5
+crit_chance = 0.0
+crit_multiplier = 1.5
+aoe_radius = 75.0
+projectile = 2
+projectile_speed = 450.0
+min_round = 6
+min_range = 0.0
+move_speed_mult = 0.8

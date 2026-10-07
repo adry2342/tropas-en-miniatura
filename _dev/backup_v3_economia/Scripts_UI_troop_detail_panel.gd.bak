@@ -1,0 +1,685 @@
+extends CanvasLayer
+## Submenú de tropa (SPEC v2 §9). Funciona igual con un nodo tropa del tablero (open) que con
+## un TroopCard de la reserva (open_card): todo se lee y se escribe en el card.
+##  - Estadísticas de TroopStats (Vida y Daño destacados; las del arma aparte).
+##  - Arsenal (clic = equipar), 3 huecos de objeto, objetos sueltos de la reserva que caben.
+##  - Habilidades (no ocupan hueco) y pasiva de la especialidad.
+##  - Subir de nivel con Puntos de Mando (⭐) → modal de elección (level_up_choice.gd).
+
+const LEVEL_UP_CHOICE_SCRIPT = preload("res://Scripts/UI/level_up_choice.gd")
+const PANEL_W := 1080.0
+const BODY_H := 404.0
+
+var troop: Node = null          # nodo tropa del tablero (null si es una tropa de la reserva)
+var card: TroopCard = null
+var level_up_choice: CanvasLayer
+
+var _panel: PanelContainer
+var _portrait: TextureRect
+var _name_label: Label
+var _sub_label: Label
+var _level_label: Label
+var _gold_label: Label
+var _tiles_box: HBoxContainer
+var _weapon_title: Label
+var _weapon_note: Label
+var _weapon_grid: GridContainer
+var _arsenal_box: VBoxContainer
+var _slots_box: VBoxContainer
+var _slots_title: Label
+var _bench_box: HFlowContainer
+var _bench_title: Label
+var _spec_box: VBoxContainer
+var _skills_flow: HFlowContainer
+var _skills_title: Label
+var _level_button: Button
+var _return_button: Button
+var _status_label: Label
+
+
+func _ready() -> void:
+	layer = 20
+	visible = false
+	_build_ui()
+	level_up_choice = LEVEL_UP_CHOICE_SCRIPT.new()
+	level_up_choice.name = "LevelUpChoice"
+	add_child(level_up_choice)
+	level_up_choice.chosen.connect(_on_offer_chosen)
+
+	EventBus.troop_inspect_requested.connect(open)
+	EventBus.troop_card_inspect_requested.connect(open_card)
+	EventBus.roster_changed.connect(_refresh)
+	EventBus.coins_changed.connect(func(_t: int, _d: int): _refresh())
+	EventBus.command_points_changed.connect(func(_t: int, _d: int): _refresh())
+	EventBus.battle_fight_started.connect(_on_fight_started)
+
+
+func _exit_tree() -> void:
+	if visible:
+		_set_blocking(false)
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if visible and event.is_action_pressed("ui_cancel"):
+		if not _modal_open():
+			close()
+		get_viewport().set_input_as_handled()
+
+
+func _modal_open() -> bool:
+	return level_up_choice != null and level_up_choice.is_open()
+
+
+## Abre el submenú de una tropa del tablero.
+func open(target: Node) -> void:
+	if not is_instance_valid(target):
+		return
+	var c = target.get("card")
+	if not c is TroopCard:
+		return
+	troop = target
+	card = c
+	_show()
+
+
+## Abre el submenú de una tropa de la reserva.
+func open_card(c: Resource) -> void:
+	if not c is TroopCard:
+		return
+	troop = null
+	card = c
+	_show()
+
+
+func _show() -> void:
+	var was_visible := visible
+	visible = true
+	_set_blocking(true)
+	_refresh()
+	if not was_visible:
+		_panel.modulate.a = 0.0
+		_panel.scale = Vector2.ONE * 0.96
+		var tw := _panel.create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_property(_panel, "modulate:a", 1.0, 0.15)
+		tw.tween_property(_panel, "scale", Vector2.ONE, 0.18)
+	# Ofertas ya pagadas y sin elegir: el modal sale directamente
+	if not card.pending_offers.is_empty():
+		level_up_choice.open(card)
+
+
+func close() -> void:
+	if not visible:
+		return
+	troop = null
+	card = null
+	visible = false
+	_set_blocking(false)
+
+
+func _on_fight_started() -> void:
+	if _modal_open():
+		level_up_choice.visible = false # las ofertas siguen guardadas en el card
+	close()
+
+
+func _set_blocking(value: bool) -> void:
+	var gsm = get_node_or_null("/root/GameStateManager")
+	if gsm:
+		gsm.ui_blocking = value
+
+
+func _gsm() -> Node:
+	return get_node_or_null("/root/GameStateManager")
+
+
+# ---------------------------------------------------------------- construcción
+
+func _section_title(text: String, color: Color = UiKit.MUTED) -> Label:
+	var l := UiKit.label(text, 13, color)
+	return l
+
+
+func _build_ui() -> void:
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(root)
+
+	var dim := ColorRect.new()
+	dim.color = Color(0.0, 0.0, 0.02, 0.66)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	dim.gui_input.connect(_on_dim_input)
+	root.add_child(dim)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(center)
+
+	_panel = UiKit.panel(UiKit.BG, Color(0.4, 0.62, 0.95, 0.85), 12, 2, 14)
+	_panel.custom_minimum_size = Vector2(PANEL_W, 0)
+	_panel.resized.connect(func(): _panel.pivot_offset = _panel.size * 0.5)
+	center.add_child(_panel)
+
+	var main := VBoxContainer.new()
+	main.add_theme_constant_override("separation", 10)
+	_panel.add_child(main)
+
+	# --- Cabecera ---
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 12)
+	main.add_child(header)
+
+	var pframe := UiKit.panel(UiKit.PANEL_2, UiKit.BORDER, 10, 1, 3)
+	pframe.custom_minimum_size = Vector2(62, 62)
+	header.add_child(pframe)
+	_portrait = TextureRect.new()
+	_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pframe.add_child(_portrait)
+
+	var htext := VBoxContainer.new()
+	htext.add_theme_constant_override("separation", 0)
+	htext.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	htext.alignment = BoxContainer.ALIGNMENT_CENTER
+	header.add_child(htext)
+	var name_row := HBoxContainer.new()
+	name_row.add_theme_constant_override("separation", 10)
+	htext.add_child(name_row)
+	_name_label = UiKit.label("", 28, UiKit.TEXT)
+	name_row.add_child(_name_label)
+	var lv_panel := UiKit.panel(Color(UiKit.GOLD, 0.16), Color(UiKit.GOLD, 0.7), 8, 1, 0)
+	var lsb: StyleBoxFlat = lv_panel.get_theme_stylebox("panel")
+	lsb.content_margin_left = 8
+	lsb.content_margin_right = 8
+	lv_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	name_row.add_child(lv_panel)
+	_level_label = UiKit.label("", 15, UiKit.GOLD)
+	lv_panel.add_child(_level_label)
+	_sub_label = UiKit.label("", 15, UiKit.RECRUIT)
+	htext.add_child(_sub_label)
+
+	_gold_label = UiKit.label("", 20, UiKit.GOLD)
+	_gold_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	_gold_label.tooltip_text = "🪙 Monedas: se ganan por cada baja enemiga y al vencer. Compran equipo y reclutas en la Intendencia.\n⭐ Puntos de Mando: se ganan al vencer una ronda. Suben de nivel a tus tropas (panel de la tropa)."
+	header.add_child(_gold_label)
+	var close_btn := Button.new()
+	close_btn.text = "✕"
+	close_btn.tooltip_text = "Cerrar (Esc)"
+	close_btn.custom_minimum_size = Vector2(40, 36)
+	close_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	UiKit.style_button(close_btn, UiKit.PANEL_2, UiKit.BORDER)
+	close_btn.pressed.connect(func():
+		if not _modal_open():
+			close())
+	header.add_child(close_btn)
+
+	# --- Cuerpo: 3 columnas ---
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 12)
+	body.custom_minimum_size.y = BODY_H
+	main.add_child(body)
+
+	# Columna 1: estadísticas
+	var col1 := UiKit.panel(UiKit.PANEL, Color(0, 0, 0, 0), 10, 0, 12)
+	col1.custom_minimum_size.x = 318
+	body.add_child(col1)
+	var c1 := VBoxContainer.new()
+	c1.add_theme_constant_override("separation", 8)
+	col1.add_child(c1)
+	c1.add_child(_section_title("ESTADÍSTICAS"))
+	_tiles_box = HBoxContainer.new()
+	_tiles_box.add_theme_constant_override("separation", 8)
+	c1.add_child(_tiles_box)
+	var wsep := HSeparator.new()
+	c1.add_child(wsep)
+	_weapon_title = UiKit.label("", 16, UiKit.TEXT)
+	c1.add_child(_weapon_title)
+	_weapon_note = UiKit.label("", 12, UiKit.MUTED)
+	c1.add_child(_weapon_note)
+	_weapon_grid = GridContainer.new()
+	_weapon_grid.columns = 2
+	_weapon_grid.add_theme_constant_override("h_separation", 12)
+	_weapon_grid.add_theme_constant_override("v_separation", 2)
+	c1.add_child(_weapon_grid)
+
+	# Columna 2: arsenal + huecos + reserva
+	var col2 := UiKit.panel(UiKit.PANEL, Color(0, 0, 0, 0), 10, 0, 12)
+	col2.custom_minimum_size.x = 372
+	body.add_child(col2)
+	var c2 := VBoxContainer.new()
+	c2.add_theme_constant_override("separation", 6)
+	col2.add_child(c2)
+	c2.add_child(_section_title("ARSENAL  ·  clic para equipar"))
+	var ascroll := ScrollContainer.new()
+	ascroll.custom_minimum_size.y = 96
+	ascroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	c2.add_child(ascroll)
+	_arsenal_box = VBoxContainer.new()
+	_arsenal_box.add_theme_constant_override("separation", 4)
+	_arsenal_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ascroll.add_child(_arsenal_box)
+	_slots_title = _section_title("")
+	c2.add_child(_slots_title)
+	_slots_box = VBoxContainer.new()
+	_slots_box.add_theme_constant_override("separation", 4)
+	c2.add_child(_slots_box)
+	_bench_title = _section_title("")
+	c2.add_child(_bench_title)
+	var bscroll := ScrollContainer.new()
+	bscroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	bscroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	c2.add_child(bscroll)
+	_bench_box = HFlowContainer.new()
+	_bench_box.add_theme_constant_override("h_separation", 4)
+	_bench_box.add_theme_constant_override("v_separation", 4)
+	_bench_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bscroll.add_child(_bench_box)
+
+	# Columna 3: especialidad + habilidades
+	var col3 := UiKit.panel(UiKit.PANEL, Color(0, 0, 0, 0), 10, 0, 12)
+	col3.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_child(col3)
+	var c3 := VBoxContainer.new()
+	c3.add_theme_constant_override("separation", 6)
+	col3.add_child(c3)
+	c3.add_child(_section_title("ESPECIALIDAD"))
+	_spec_box = VBoxContainer.new()
+	_spec_box.add_theme_constant_override("separation", 2)
+	c3.add_child(_spec_box)
+	c3.add_child(HSeparator.new())
+	_skills_title = _section_title("")
+	c3.add_child(_skills_title)
+	var sscroll := ScrollContainer.new()
+	sscroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sscroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	c3.add_child(sscroll)
+	_skills_flow = HFlowContainer.new()
+	_skills_flow.add_theme_constant_override("h_separation", 5)
+	_skills_flow.add_theme_constant_override("v_separation", 5)
+	_skills_flow.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sscroll.add_child(_skills_flow)
+
+	# --- Pie ---
+	var footer := HBoxContainer.new()
+	footer.add_theme_constant_override("separation", 12)
+	main.add_child(footer)
+	_status_label = UiKit.wrap_label("", 12, UiKit.MUTED)
+	_status_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	footer.add_child(_status_label)
+	_return_button = Button.new()
+	_return_button.text = "↩ Retirar a la reserva"
+	_return_button.tooltip_text = "Quita la tropa del tablero. Conserva todo lo que tiene."
+	_return_button.custom_minimum_size = Vector2(190, 46)
+	_return_button.add_theme_font_size_override("font_size", 14)
+	UiKit.style_button(_return_button, UiKit.PANEL_2, UiKit.BORDER)
+	_return_button.pressed.connect(_on_return_pressed)
+	footer.add_child(_return_button)
+	_level_button = Button.new()
+	_level_button.custom_minimum_size = Vector2(250, 46)
+	_level_button.add_theme_font_size_override("font_size", 17)
+	UiKit.style_button(_level_button, Color(0.32, 0.25, 0.05), UiKit.GOLD, Color(1.0, 0.92, 0.6), 8)
+	_level_button.pressed.connect(_on_level_up_pressed)
+	footer.add_child(_level_button)
+
+
+func _on_dim_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+		if not _modal_open():
+			close()
+
+
+# ---------------------------------------------------------------- refresco
+
+func _clear(n: Node) -> void:
+	for c in n.get_children():
+		n.remove_child(c)
+		c.queue_free()
+
+
+func _refresh() -> void:
+	if not visible or card == null:
+		return
+	if troop != null and (not is_instance_valid(troop) or troop.is_queued_for_deletion()):
+		close()
+		return
+	var gsm := _gsm()
+	var coins: int = gsm.coins if gsm else 0
+	var points: int = gsm.command_points if gsm else 0
+	var s := TroopStats.compute(card)
+
+	# Cabecera
+	_portrait.texture = UiKit.troop_texture(card)
+	_name_label.text = card.unit_name
+	_level_label.text = "Nv. %d" % card.level
+	if card.specialty:
+		_sub_label.text = "%s %s" % [UiKit.emo(card.specialty.emoji), card.specialty.display_name]
+	else:
+		_sub_label.text = "🔰 Recluta  ·  elige especialidad al subir a Nv. %d" % TroopCard.SPECIALTY_LEVEL
+	_sub_label.add_theme_color_override("font_color", UiKit.specialty_color(card))
+	_gold_label.text = "🪙 %d   ⭐ %d" % [coins, points]
+
+	# Estadísticas
+	_clear(_tiles_box)
+	var th := UiKit.stat_tile("❤ VIDA", UiKit.health_text(s), UiKit.HEALTH, 30)
+	th.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	th.tooltip_text = "Vida máxima (base %d, +10 %% por nivel, más objetos y habilidades)" % roundi(card.base_health)
+	_tiles_box.add_child(th)
+	var td := UiKit.stat_tile("💥 DAÑO", UiKit.damage_text(s), UiKit.DAMAGE, 30)
+	td.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	td.tooltip_text = "Multiplicador del daño del arma (base %s)" % UiKit.pct(card.base_damage)
+	_tiles_box.add_child(td)
+
+	var w: WeaponData = s.weapon
+	_weapon_title.text = "%s %s" % [UiKit.emo(w.emoji), w.display_name]
+	_weapon_title.add_theme_color_override("font_color", UiKit.rarity_color(w.rarity))
+	_weapon_note.text = "%s%s" % [w.get_family_name(), "  ·  ✓ afín: +15 % daño, +10 precisión" if s.affinity else ""]
+	_weapon_note.add_theme_color_override("font_color", UiKit.UP if s.affinity else UiKit.MUTED)
+	_clear(_weapon_grid)
+	var golpe := "%d" % roundi(s.hit_damage) if s.pellets <= 1 else "%d × %d" % [s.pellets, roundi(s.hit_damage)]
+	var rows: Array = [
+		["Impacto", golpe],
+		["Cadencia", "%.2f disparos/s" % s.fire_rate],
+		["Precisión", UiKit.pct(s.accuracy)],
+		["Crítico", "%s  (×%.2f)" % [UiKit.pct(s.crit_chance), s.crit_multiplier]],
+		["Alcance", "%d  (óptimo %d)" % [roundi(s.attack_range), roundi(s.optimal_range)]],
+		["Cargador", "∞" if s.magazine <= 0 else "%d  ·  recarga %.1f s" % [s.magazine, s.reload_time]],
+	]
+	if s.aoe_radius > 0.0:
+		rows.append(["Explosión", "radio %d" % roundi(s.aoe_radius)])
+	if s.burn_dps > 0.0:
+		rows.append(["Quemadura", "%d/s · %.0f s" % [roundi(s.burn_dps), s.burn_duration]])
+	if s.pierce > 0:
+		rows.append(["Atraviesa", "%d enemigo(s)" % s.pierce])
+	if s.armor > 0.0:
+		rows.append(["Armadura", UiKit.pct(s.armor)])
+	if s.dodge > 0.0:
+		rows.append(["Esquiva", UiKit.pct(s.dodge)])
+	rows.append(["Movimiento", "%d" % roundi(s.move_speed)])
+	rows.append(["DPS estimado", "%.1f" % s.dps])
+	for r in rows:
+		_weapon_grid.add_child(UiKit.label(r[0], 13, UiKit.MUTED))
+		var v := UiKit.label(r[1], 13, UiKit.TEXT if r[0] != "DPS estimado" else UiKit.GOLD)
+		_weapon_grid.add_child(v)
+
+	_refresh_arsenal()
+	_refresh_slots()
+	_refresh_bench()
+	_refresh_specialty()
+	_refresh_skills()
+	_refresh_footer(points)
+
+
+func _refresh_arsenal() -> void:
+	_clear(_arsenal_box)
+	for i in card.weapons.size():
+		var w: WeaponData = card.weapons[i]
+		if w == null:
+			continue
+		var equipped := i == clampi(card.equipped_weapon, 0, card.weapons.size() - 1)
+		var b := Button.new()
+		b.custom_minimum_size = Vector2(0, 34)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.add_theme_font_size_override("font_size", 14)
+		var aff := card.specialty != null and card.specialty.is_affine(w)
+		b.text = "%s  %s%s" % [UiKit.emo(w.emoji), w.display_name, "  · afín" if aff else ""]
+		b.tooltip_text = "%s · %s\nDaño %s · %.1f disp/s · alcance %d · precisión %s · cargador %s" % [
+			w.display_name, w.get_family_name(),
+			("%d×%d" % [w.pellets, roundi(w.damage)]) if w.pellets > 1 else str(roundi(w.damage)),
+			w.fire_rate, roundi(w.attack_range), UiKit.pct(w.accuracy), UiKit.magazine_text(w.magazine)]
+		if equipped:
+			UiKit.style_button(b, Color(0.12, 0.26, 0.16), UiKit.UP, Color.WHITE)
+			var tag := UiKit.label("EQUIPADA ✓", 11, UiKit.UP)
+			tag.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
+			tag.offset_left = -90
+			tag.offset_right = -10
+			tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			b.add_child(tag)
+		else:
+			UiKit.style_button(b, UiKit.PANEL_2, UiKit.BORDER)
+			var tag2 := UiKit.label("Equipar", 11, UiKit.MUTED)
+			tag2.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
+			tag2.offset_left = -90
+			tag2.offset_right = -10
+			tag2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			b.add_child(tag2)
+			b.pressed.connect(equip_weapon.bind(i))
+		_arsenal_box.add_child(b)
+
+
+func _refresh_slots() -> void:
+	_slots_title.text = "OBJETOS  ·  %d/%d huecos" % [card.items.size(), TroopCard.MAX_ITEM_SLOTS]
+	_clear(_slots_box)
+	for i in TroopCard.MAX_ITEM_SLOTS:
+		var row: PanelContainer
+		if i < card.items.size() and card.items[i] != null:
+			var it: ItemData = card.items[i]
+			row = UiKit.panel(Color(0.2, 0.14, 0.07), Color(1.0, 0.58, 0.18, 0.7), 8, 1, 6)
+			var h := HBoxContainer.new()
+			h.add_theme_constant_override("separation", 8)
+			row.add_child(h)
+			h.add_child(UiKit.label(UiKit.emo(it.emoji), 20))
+			var tv := VBoxContainer.new()
+			tv.add_theme_constant_override("separation", -3)
+			tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			h.add_child(tv)
+			var nl := UiKit.label("%s  ·  %s" % [it.display_name, it.get_slot_name()], 14, UiKit.rarity_color(it.rarity).lerp(Color.WHITE, 0.2))
+			nl.clip_text = true
+			nl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+			tv.add_child(nl)
+			# Descripción real del objeto (o sus modificadores si no tiene descripción)
+			var desc: String = it.description.strip_edges()
+			if desc.is_empty():
+				desc = TroopStats.describe_modifiers(it.modifiers) if not it.modifiers.is_empty() else it.get_slot_name()
+			var ml := UiKit.label(desc, 11, UiKit.MUTED)
+			ml.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			ml.max_lines_visible = 2
+			ml.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+			tv.add_child(ml)
+			row.tooltip_text = "%s (%s)\n%s" % [it.display_name, it.get_slot_name(), it.description]
+			var q := Button.new()
+			q.text = "Quitar"
+			q.tooltip_text = "Devuelve el objeto a la reserva"
+			q.custom_minimum_size = Vector2(64, 28)
+			q.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			q.add_theme_font_size_override("font_size", 12)
+			UiKit.style_button(q, Color(0.3, 0.12, 0.1), UiKit.DOWN)
+			q.pressed.connect(remove_item.bind(it))
+			h.add_child(q)
+		else:
+			row = UiKit.panel(Color(0.09, 0.1, 0.13), Color(0.32, 0.35, 0.42, 0.6), 8, 1, 6)
+			var e := UiKit.label("○  Hueco libre", 13, Color(0.5, 0.53, 0.6))
+			e.custom_minimum_size.y = 33
+			e.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			row.add_child(e)
+		row.custom_minimum_size.y = 46
+		_slots_box.add_child(row)
+
+
+func _refresh_bench() -> void:
+	_clear(_bench_box)
+	var gsm := _gsm()
+	var fit := 0
+	var total := 0
+	if gsm:
+		for it in gsm.get_bench_items():
+			total += 1
+			if not card.can_add_item(it):
+				continue
+			fit += 1
+			var b := Button.new()
+			b.text = "＋ %s %s" % [UiKit.emo(it.emoji), it.display_name]
+			b.tooltip_text = "%s (%s)\n%s" % [it.display_name, it.get_slot_name(), it.description]
+			b.add_theme_font_size_override("font_size", 12)
+			b.custom_minimum_size.y = 28
+			UiKit.style_button(b, Color(0.18, 0.15, 0.08), Color(1.0, 0.58, 0.18, 0.6))
+			b.pressed.connect(equip_bench_item.bind(it))
+			_bench_box.add_child(b)
+		for wp in gsm.get_bench_weapons():
+			total += 1
+			var wb := Button.new()
+			wb.text = "＋ %s %s" % [UiKit.emo(wp.emoji), wp.display_name]
+			wb.tooltip_text = "%s · %s (arma)\nSe añade al arsenal de la tropa." % [wp.display_name, wp.get_family_name()]
+			wb.add_theme_font_size_override("font_size", 12)
+			wb.custom_minimum_size.y = 28
+			if card.has_weapon(wp.id):
+				wb.disabled = true
+				wb.tooltip_text += "\nYa la tiene."
+			else:
+				fit += 1
+			UiKit.style_button(wb, Color(0.18, 0.15, 0.08), UiKit.rarity_color(wp.rarity))
+			wb.pressed.connect(equip_bench_weapon.bind(wp))
+			_bench_box.add_child(wb)
+	_bench_title.text = "EN LA RESERVA  ·  clic para equipar"
+	if fit == 0:
+		var msg := "No hay objetos ni armas sueltos."
+		if total > 0:
+			msg = "Ninguno de los %d recursos sueltos se puede equipar." % total
+		if card.items.size() >= TroopCard.MAX_ITEM_SLOTS:
+			msg = "Huecos llenos: quita uno para equipar otro."
+		_bench_box.add_child(UiKit.label(msg, 12, Color(0.5, 0.53, 0.6)))
+
+
+func _refresh_specialty() -> void:
+	_clear(_spec_box)
+	var sp := card.specialty
+	if sp == null:
+		_spec_box.add_child(UiKit.label("🔰 Recluta", 17, UiKit.RECRUIT))
+		_spec_box.add_child(UiKit.wrap_label("Al subir a Nv. %d elegirá entre 2 especialidades al azar." % TroopCard.SPECIALTY_LEVEL, 12, UiKit.MUTED, 300))
+		return
+	_spec_box.add_child(UiKit.label("%s %s" % [UiKit.emo(sp.emoji), sp.display_name], 17, sp.color))
+	var fams: Array[String] = []
+	for f in sp.affine_families:
+		fams.append(WeaponData.FAMILY_NAMES[clampi(int(f), 0, WeaponData.FAMILY_NAMES.size() - 1)])
+	_spec_box.add_child(UiKit.wrap_label("Armas afines: %s" % ", ".join(fams), 12, UiKit.MUTED, 300))
+	var pv := UiKit.panel(Color(sp.color, 0.12), Color(sp.color, 0.5), 8, 1, 8)
+	var pvb := VBoxContainer.new()
+	pvb.add_theme_constant_override("separation", 0)
+	pv.add_child(pvb)
+	pvb.add_child(UiKit.label("✦ Pasiva · %s" % sp.passive_name, 13, sp.color.lightened(0.25)))
+	pvb.add_child(UiKit.wrap_label(sp.passive_description, 12, UiKit.TEXT.darkened(0.1), 300))
+	_spec_box.add_child(pv)
+
+
+func _refresh_skills() -> void:
+	_clear(_skills_flow)
+	_skills_title.text = "HABILIDADES (%d)  ·  no ocupan hueco" % card.skills.size()
+	if card.skills.is_empty():
+		_skills_flow.add_child(UiKit.wrap_label("Aún sin habilidades. Se consiguen al subir de nivel y no ocupan huecos de objeto.", 12, Color(0.5, 0.53, 0.6), 300))
+		return
+	# Agrupa las acumulables (×N)
+	var order: Array = []
+	var counts := {}
+	var by_id := {}
+	for sk in card.skills:
+		if sk == null:
+			continue
+		if not counts.has(sk.id):
+			order.append(sk.id)
+			by_id[sk.id] = sk
+		counts[sk.id] = int(counts.get(sk.id, 0)) + 1
+	for id in order:
+		var sk: SkillData = by_id[id]
+		var n: int = counts[id]
+		var col := Color(0.3, 0.6, 1.0)
+		var chip := UiKit.panel(Color(0.1, 0.17, 0.3), Color(col, 0.7), 12, 1, 0)
+		var csb: StyleBoxFlat = chip.get_theme_stylebox("panel")
+		csb.content_margin_left = 9
+		csb.content_margin_right = 9
+		csb.content_margin_top = 3
+		csb.content_margin_bottom = 3
+		chip.mouse_filter = Control.MOUSE_FILTER_STOP
+		chip.add_child(UiKit.label("%s %s%s" % [UiKit.emo(sk.emoji), sk.display_name, (" ×%d" % n) if n > 1 else ""], 13, Color(0.82, 0.9, 1.0)))
+		var tip := "%s\n%s" % [sk.display_name, sk.description]
+		if not sk.modifiers.is_empty():
+			tip += "\n" + TroopStats.describe_modifiers(sk.modifiers)
+		chip.tooltip_text = tip
+		_skills_flow.add_child(chip)
+
+
+func _refresh_footer(points: int) -> void:
+	_return_button.visible = troop != null
+	var info := "Habilidades: no ocupan hueco  ·  Objetos: cada uno ocupa 1 hueco (máx. %d)" % TroopCard.MAX_ITEM_SLOTS
+	if troop == null:
+		info = "📦 En la reserva (arrástrala al tablero)\n" + info
+	_status_label.text = info
+	if not card.pending_offers.is_empty():
+		_level_button.text = "⭐ Elegir mejora pendiente"
+		_level_button.disabled = false
+		_level_button.tooltip_text = "Ya pagada: elige una de las dos ofertas"
+	elif card.level >= TroopCard.MAX_LEVEL:
+		_level_button.text = "Nivel máximo"
+		_level_button.disabled = true
+		_level_button.tooltip_text = ""
+	else:
+		var cost := card.get_level_up_cost()
+		_level_button.text = "⬆ Subir a Nv. %d (⭐ %d)" % [card.level + 1, cost]
+		_level_button.disabled = points < cost
+		_level_button.tooltip_text = "Faltan %d ⭐" % (cost - points) if points < cost else "Elegirás 1 de 2 habilidades"
+
+
+# ---------------------------------------------------------------- acciones
+
+func _changed() -> void:
+	EventBus.roster_changed.emit()
+
+
+func equip_weapon(index: int) -> void:
+	if card == null or index < 0 or index >= card.weapons.size():
+		return
+	card.equipped_weapon = index
+	_changed()
+
+
+func remove_item(item: ItemData) -> bool:
+	if card == null:
+		return false
+	var ok := card.remove_item(item) # lo devuelve a la reserva (emite roster_changed vía GSM)
+	if ok:
+		_changed()
+	return ok
+
+
+func equip_bench_item(item: ItemData) -> bool:
+	var gsm := _gsm()
+	if card == null or gsm == null:
+		return false
+	var ok: bool = gsm.equip_item_from_bench(card, item)
+	if ok:
+		_changed()
+	return ok
+
+
+func equip_bench_weapon(weapon: WeaponData) -> bool:
+	var gsm := _gsm()
+	if card == null or gsm == null:
+		return false
+	var ok: bool = gsm.equip_weapon_from_bench(card, weapon)
+	if ok:
+		_changed()
+	return ok
+
+
+func _on_level_up_pressed() -> void:
+	if card == null:
+		return
+	if not card.pending_offers.is_empty():
+		level_up_choice.open(card)
+		return
+	if LevelUpSystem.begin_level_up(card):
+		level_up_choice.open(card) # (idempotente: el modal ya escucha level_up_offers_ready)
+	_refresh()
+
+
+func _on_offer_chosen(_c: TroopCard, _offer: Dictionary) -> void:
+	_refresh()
+
+
+func _on_return_pressed() -> void:
+	var target: Node = troop
+	var gsm := _gsm()
+	close()
+	if gsm and is_instance_valid(target):
+		gsm.return_troop_to_bench(target)

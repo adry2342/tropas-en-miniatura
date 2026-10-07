@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "cirujano"
+display_name = "Cirujano"
+description = "Sus curaciones curan un 50 % más."
+emoji = "⚕️"
+rarity = 1
+specialty_id = "medico"
+modifiers = {"heal_pct": 0.5}

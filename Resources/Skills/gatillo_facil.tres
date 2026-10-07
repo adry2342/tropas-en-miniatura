@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "gatillo_facil"
+display_name = "Gatillo fácil"
+description = "+15 % de cadencia, −5 % de precisión."
+emoji = "⚡"
+rarity = 0
+specialty_id = ""
+modifiers = {"fire_rate_pct": 0.15, "accuracy": -0.05}

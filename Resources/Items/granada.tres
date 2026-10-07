@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/item_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "granada"
+display_name = "Granada"
+description = "Cada 6 s lanza una granada: 30 de daño en radio 70."
+emoji = "💣"
+rarity = 1
+slot = 2
+effect_id = "granada"
+params = {"cooldown": 6.0, "damage": 30.0, "radius": 70.0}

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpecialtyData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/specialty_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "granadero"
+display_name = "Zapador"
+emoji = "💣"
+color = Color(1.0, 0.6, 0.25, 1)
+affine_families = Array[int]([5])
+description = "Explosivos y minas. Afín a la bazuca. Prepara el terreno antes del combate."
+passive_name = "Minas y carga hueca"
+passive_description = "Al empezar el combate entierra una mina en mitad del campo, en su fila (estalla cuando pasa un enemigo). Sus explosiones atraviesan blindajes y hacen +30 % a los jefes. Lanza las granadas un 30 % más a menudo."
+passive_effect_id = "minas"
+passive_params = {"count": 1, "damage": 45.0, "radius": 70.0, "trigger": 30.0, "distance": 110.0}
+modifiers = {}
+extra_effects = {"carga_hueca": {}}
+synergy_text = "Colócalo en la fila por la que avanzará el enemigo: su mina le espera en mitad del campo. Con una granada equipada, aún más."

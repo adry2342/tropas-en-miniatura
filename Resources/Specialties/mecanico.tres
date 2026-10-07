@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpecialtyData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/specialty_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "mecanico"
+display_name = "Mecánico"
+emoji = "🔧"
+color = Color(0.62, 0.68, 0.78, 1)
+affine_families = Array[int]([4])
+description = "Especialista en vehículos (motos, quads y más). Afín a armas pesadas. Mantiene en marcha la maquinaria del pelotón."
+passive_name = "Taller de campaña"
+passive_description = "Mecánica pendiente de diseñar (aún no tiene efecto en combate)."
+passive_effect_id = ""
+passive_params = {}
+modifiers = {}
+extra_effects = {}
+synergy_text = "Pendiente: sinergias con los vehículos del pelotón."

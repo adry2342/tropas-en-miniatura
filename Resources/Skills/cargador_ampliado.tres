@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "cargador_ampliado"
+display_name = "Cargador ampliado"
+description = "+40 % de cargador."
+emoji = "📦"
+rarity = 0
+specialty_id = "soldado"
+modifiers = {"magazine_pct": 0.4}

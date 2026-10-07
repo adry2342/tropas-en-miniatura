@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/item_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "chaleco_tactico"
+display_name = "Chaleco táctico"
+description = "+25 de vida, −5 % de movimiento."
+emoji = "🦺"
+rarity = 0
+slot = 1
+modifiers = {"health_flat": 25.0, "move_speed_pct": -0.05}

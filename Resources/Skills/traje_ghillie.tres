@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "traje_ghillie"
+display_name = "Traje ghillie"
+description = "Los enemigos no le apuntan durante los 6 primeros segundos."
+emoji = "🍃"
+rarity = 1
+specialty_id = "francotirador"
+effect_id = "camuflaje"
+params = {"duration": 6.0}

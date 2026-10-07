@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/item_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "inyector_adrenalina"
+display_name = "Inyector de adrenalina"
+description = "Al empezar el combate: frenético durante 5 s (+40 % de cadencia y +30 % de velocidad)."
+emoji = "💉"
+rarity = 1
+slot = 2
+effect_id = "adrenalina"
+params = {"fire_rate_pct": 0.4, "move_speed_pct": 0.3, "duration": 5.0}

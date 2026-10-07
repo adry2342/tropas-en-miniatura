@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/weapon_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "ametralladora"
+display_name = "Ametralladora"
+emoji = "🔗"
+family = 4
+rarity = 1
+description = "Cargador de 40. Pesada: dispara parada y tarda 4 s en recargar."
+damage = 6.0
+fire_rate = 4.0
+attack_range = 360.0
+accuracy = 0.62
+optimal_range = 230.0
+accuracy_falloff = 0.1
+magazine = 25
+reload_time = 4.0
+crit_chance = 0.03
+crit_multiplier = 1.6
+projectile_speed = 750.0
+min_round = 3
+close_bonus = 0.08
+move_speed_mult = 0.8

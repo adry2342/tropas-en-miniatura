@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/item_data.gd" id="1_item_data"]
+
+[resource]
+script = ExtResource("1_item_data")
+id = "soldado_instinto_veterano"
+display_name = "Instinto de Veterano"
+description = "+10% Prob. Crítico y +10 Velocidad"
+rarity = 2
+health_bonus = 0.0
+damage_bonus = 0.0
+speed_bonus = 10.0
+range_bonus = 0.0
+crit_chance_bonus = 0.1

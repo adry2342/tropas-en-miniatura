@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/weapon_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "subfusil"
+display_name = "Subfusil"
+emoji = "💨"
+family = 1
+rarity = 0
+description = "Mucha cadencia, poca precisión de lejos."
+damage = 4.0
+fire_rate = 4.5
+attack_range = 230.0
+accuracy = 0.68
+optimal_range = 110.0
+accuracy_falloff = 0.2
+magazine = 18
+reload_time = 1.8
+crit_chance = 0.03
+crit_multiplier = 1.6
+projectile_speed = 700.0
+recruit_pool = true
+min_round = 1
+close_bonus = 0.2
+fire_on_move = true
+move_speed_mult = 1.05

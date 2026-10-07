@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "comando"
+display_name = "Comando"
+description = "+15 de vida. Acumulable."
+emoji = "💪"
+rarity = 0
+specialty_id = ""
+stackable = true
+modifiers = {"health_flat": 15.0}

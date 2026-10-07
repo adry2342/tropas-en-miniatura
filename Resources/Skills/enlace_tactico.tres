@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "enlace_tactico"
+display_name = "Enlace táctico"
+description = "Las marcas del radio duran 2 s más y dan +10 % de daño extra."
+emoji = "📻"
+rarity = 0
+specialty_id = "comunicaciones"
+effect_id = "enlace"
+params = {"mark_duration": 2.0, "mark_bonus": 0.1}

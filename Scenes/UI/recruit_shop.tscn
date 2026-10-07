@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/recruit_shop.gd" id="1_shop"]
+
+[node name="RecruitShop" type="CanvasLayer"]
+layer = 25
+script = ExtResource("1_shop")

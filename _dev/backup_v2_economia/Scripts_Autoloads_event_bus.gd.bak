@@ -1,0 +1,35 @@
+extends Node
+
+# Señales de flujo de batalla
+@warning_ignore("unused_signal")
+signal battle_prep_started
+@warning_ignore("unused_signal")
+signal battle_fight_started
+@warning_ignore("unused_signal")
+signal battle_ended(is_victory: bool)
+
+# Señales de tropas
+@warning_ignore("unused_signal")
+signal troop_spawned(troop: CharacterBody2D)
+@warning_ignore("unused_signal")
+signal troop_died(troop: CharacterBody2D)
+
+# Señales de interfaz y recompensas
+@warning_ignore("unused_signal")
+signal reward_selected(item_data: Resource)
+
+# Fase de planificación: ejército, submenú de personaje y economía
+@warning_ignore("unused_signal")
+signal roster_changed # Cambió algo que afecta a la lista de tropas (nivel, objetos, oro, bandeja)
+@warning_ignore("unused_signal")
+signal troop_inspect_requested(troop: CharacterBody2D) # Abrir el submenú de un personaje
+@warning_ignore("unused_signal")
+signal troop_card_inspect_requested(card: Resource) # Abrir el submenú de una tropa de la reserva
+@warning_ignore("unused_signal")
+signal recruit_shop_requested # Abrir la tienda de reclutamiento (clic en un hueco vacío)
+
+# Subida de nivel (SPEC v2)
+@warning_ignore("unused_signal")
+signal level_up_offers_ready(card: TroopCard) # Ofertas pagadas listas: la UI abre el modal de elección
+@warning_ignore("unused_signal")
+signal troop_leveled(card: TroopCard) # La tropa eligió oferta y subió de nivel

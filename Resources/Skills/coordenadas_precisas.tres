@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "coordenadas_precisas"
+display_name = "Coordenadas precisas"
+description = "La artillería del radioperador dispara 2 proyectiles más y hace +30 % de daño."
+emoji = "🗺️"
+rarity = 1
+specialty_id = "comunicaciones"
+effect_id = "coordenadas"
+params = {"extra_shells": 2, "damage_pct": 0.3}

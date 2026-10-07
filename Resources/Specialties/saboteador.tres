@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpecialtyData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/specialty_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "saboteador"
+display_name = "Saboteador"
+emoji = "🧨"
+color = Color(1.0, 0.58, 0.22, 1)
+affine_families = Array[int]([5])
+description = "Sabotea al bando contrario: vehículos, armas, trampas y minas enemigas. Afín a explosivos."
+passive_name = "Sabotaje"
+passive_description = "Mecánica pendiente de diseñar (aún no tiene efecto en combate)."
+passive_effect_id = ""
+passive_params = {}
+modifiers = {}
+extra_effects = {}
+synergy_text = "Pendiente: sinergias con el Infiltrado y contra pelotones con vehículos."

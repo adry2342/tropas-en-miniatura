@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "autocuracion"
+display_name = "Autocuración"
+description = "Se cura un 2 % de su vida máx. por segundo."
+emoji = "💚"
+rarity = 1
+specialty_id = "medico"
+effect_id = "autocuracion"
+params = {"pct_per_sec": 0.02}

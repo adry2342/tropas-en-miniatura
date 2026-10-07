@@ -1,0 +1,722 @@
+extends CharacterBody2D
+## Tropa en el tablero. Todo sale de su TroopCard (SPEC v2): las estadísticas se calculan con
+## TroopStats.compute(card) y los efectos especiales los gestiona Effects (Scripts/Systems/effects.gd).
+
+signal died(troop: CharacterBody2D)
+
+const BULLET_SCENE = preload("res://Scenes/Battle/bullet.tscn")
+const DEFAULT_TEXTURE = preload("res://Assets/Sprites/sprite-personaje-basico.png")
+const SPRITE_HEIGHT := 80.0
+const BOSS_SCALE := 1.8
+const CLICK_DRAG_TOLERANCE := 6.0
+const MISS_TEXT_COOLDOWN := 0.45
+const BURN_TICK := 0.5
+const CAMO_ALPHA := 0.4
+const NAME_LABEL_HALF_W := 40.0
+const PLAYER_TINT := Color.WHITE
+const ENEMY_TINT := Color(1.0, 0.7, 0.7)
+const BURN_TINT := Color(1.0, 0.55, 0.2)
+
+## Emojis que la fuente no dibuja (salen como caja): se sustituyen por otros que sí (igual que la UI).
+const EMOJI_FALLBACK := {"🪖": "🎖️", "⛓️": "🔗"}
+
+enum Team { PLAYER, ENEMY }
+
+@export var team: Team = Team.PLAYER:
+	set(value):
+		team = value
+		if is_node_ready():
+			update_visuals()
+			update_health_bar()
+
+## Estado persistente de la tropa. Se asigna con setup(card).
+var card: TroopCard = null
+## Estadísticas finales (TroopStats.compute). Se recalculan en refresh_from_card().
+var stats: Dictionary = {}
+var effects: Effects = null
+
+var health: float = 100.0
+var target: Node2D = null
+var attack_cooldown: float = 0.0
+var ammo: int = 0
+var reloading: bool = false
+var reload_left: float = 0.0
+var statuses: Dictionary = {}   # "burn": {dps, left, tick}
+var buffs: Dictionary = {}      # clave -> {stat, value, left}
+var camo_left: float = 0.0      # >0 = camuflada: los enemigos no la eligen como objetivo
+var still_time: float = 0.0     # segundos sin moverse (paciencia del francotirador)
+var is_battle_started: bool = false
+var is_dead: bool = false
+
+## Pruebas: -1 = azar, 0 = siempre falla, 1 = siempre acierta. Igual para críticos y esquiva.
+var force_hit: int = -1
+var force_crit: int = -1
+var force_dodge: int = -1
+## false = no busca objetivo, no se mueve ni dispara (maniquí de pruebas); sigue recibiendo daño y efectos.
+var ai_enabled: bool = true
+
+## Contadores (estadísticas del combate y pruebas)
+var shots_fired: int = 0
+var pellets_fired: int = 0
+var hits: int = 0
+var misses: int = 0
+var crits: int = 0
+var reloads: int = 0
+var dodges: int = 0
+var kills: int = 0
+var burn_damage_taken: float = 0.0
+var grenades_thrown: int = 0
+
+## Nivel (compatibilidad: sale del card)
+var level: int:
+	get:
+		return card.level if card else 1
+
+var is_dragging: bool = false
+var _press_position: Vector2 = Vector2.ZERO
+var _drag_origin: Vector2 = Vector2.ZERO
+var _grab_radius: float = 40.0
+var _miss_text_cd: float = 0.0
+var _sprite_height: float = SPRITE_HEIGHT
+var _hurt_flash: float = 0.0
+
+
+func _ready() -> void:
+	add_to_group("troops")
+	if card == null:
+		card = UnitFactory.make_recruit() # respaldo: una tropa nunca se queda sin card
+	var bus = get_node_or_null("/root/EventBus")
+	if bus:
+		bus.battle_fight_started.connect(_on_battle_fight_started)
+		bus.roster_changed.connect(_on_roster_changed)
+		bus.troop_leveled.connect(_on_troop_leveled)
+	_style_bars()
+	refresh_from_card()
+	if team == Team.PLAYER:
+		call_deferred("_snap_to_grid")
+
+
+## Configura la tropa con su card (llamar antes o después de añadirla al árbol).
+func setup(new_card: TroopCard) -> void:
+	card = new_card
+	refresh_from_card()
+
+
+## Recalcula estadísticas, etiqueta, sprite y barras. Fuera de combate deja la vida al máximo.
+func refresh_from_card() -> void:
+	if card == null:
+		return
+	stats = TroopStats.compute(card)
+	_sprite_height = SPRITE_HEIGHT * (BOSS_SCALE if card.is_boss else 1.0)
+	if not is_battle_started:
+		health = get_max_health()
+		ammo = int(stats.magazine)
+		reloading = false
+		reload_left = 0.0
+	else:
+		health = minf(health, get_max_health())
+	_apply_sprite()
+	_update_name_label()
+	update_health_bar()
+	_update_reload_bar()
+	update_visuals()
+
+
+## Alias de compatibilidad (SPEC 8).
+func refresh_stats() -> void:
+	refresh_from_card()
+
+
+func _on_roster_changed() -> void:
+	if not is_battle_started and not is_dead:
+		refresh_from_card()
+
+
+func _on_troop_leveled(leveled: TroopCard) -> void:
+	if not is_battle_started and not is_dead and leveled == card:
+		refresh_from_card()
+
+
+func _on_battle_fight_started() -> void:
+	if is_battle_started or has_meta("is_drag_preview"):
+		return
+	is_dragging = false
+	refresh_from_card() # vida al máximo y cargador lleno
+	is_battle_started = true
+	effects = Effects.new(self)
+	effects.on_fight_start()
+
+
+# ================================================================ arrastre / cuadrícula / clic
+
+func _input(event: InputEvent) -> void:
+	if is_battle_started or team != Team.PLAYER or has_meta("is_drag_preview"):
+		return
+	# Con un menú modal abierto (submenú de personaje) no se arrastra nada
+	var gsm = get_node_or_null("/root/GameStateManager")
+	if gsm and gsm.ui_blocking:
+		is_dragging = false
+		return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			var mouse_pos = get_global_mouse_position()
+			if global_position.distance_to(mouse_pos) <= _grab_radius:
+				is_dragging = true
+				_press_position = mouse_pos
+				_drag_origin = global_position
+				get_viewport().set_input_as_handled()
+		elif is_dragging:
+			is_dragging = false
+			get_viewport().set_input_as_handled()
+			# Soltada sobre la reserva: la tropa vuelve a la reserva con su card (nivel, objetos, habilidades)
+			if gsm and _is_over_return_zone():
+				gsm.return_troop_to_bench(self)
+				return
+			_place_on_grid()
+			# Un clic sin arrastrar abre el submenú del personaje
+			if get_global_mouse_position().distance_to(_press_position) < CLICK_DRAG_TOLERANCE:
+				var bus = get_node_or_null("/root/EventBus")
+				if bus:
+					bus.troop_inspect_requested.emit(self)
+	elif event is InputEventMouseMotion and is_dragging:
+		global_position = get_global_mouse_position()
+		get_viewport().set_input_as_handled()
+
+
+func _get_grid() -> Node:
+	var scene := get_tree().current_scene
+	return scene.find_child("DeploymentGrid", true, false) if scene else null
+
+
+func _is_over_return_zone() -> bool:
+	var screen_pos: Vector2 = get_viewport().get_mouse_position()
+	for zone in get_tree().get_nodes_in_group("troop_return_zone"):
+		if zone is Control and zone.is_visible_in_tree() and zone.get_global_rect().has_point(screen_pos):
+			return true
+	return false
+
+
+## Al soltar tras un arrastre: casilla más cercana; si está ocupada, las dos tropas intercambian sitio.
+func _place_on_grid() -> void:
+	var grid = _get_grid()
+	if not grid or not grid.has_method("get_snapped_position"):
+		return
+	var cell: Vector2 = grid.get_snapped_position(global_position)
+	var occupant = grid.get_occupant(cell, self)
+	if occupant:
+		occupant.global_position = _drag_origin
+	global_position = cell
+
+
+## Ajuste inicial a la cuadrícula: casilla libre más cercana (nunca una ocupada).
+func _snap_to_grid() -> void:
+	if team != Team.PLAYER or has_meta("is_drag_preview") or not is_inside_tree():
+		return
+	var grid = _get_grid()
+	if grid and grid.has_method("get_nearest_free_position"):
+		var free_pos: Vector2 = grid.get_nearest_free_position(global_position, self)
+		if free_pos != Vector2.INF:
+			global_position = free_pos
+
+
+# ================================================================ aspecto
+
+func _apply_sprite() -> void:
+	var sprite: Sprite2D = get_node_or_null("Sprite2D")
+	if not sprite:
+		return
+	var tex: Texture2D = card.specialty.texture if card and card.specialty and card.specialty.texture else DEFAULT_TEXTURE
+	sprite.texture = tex
+	if tex:
+		var factor: float = _sprite_height / float(tex.get_height())
+		sprite.scale = Vector2(factor, factor)
+	var shape: CollisionShape2D = get_node_or_null("CollisionShape2D")
+	if shape:
+		shape.scale = Vector2.ONE * (BOSS_SCALE if card and card.is_boss else 1.0)
+	_layout_overlays()
+
+
+func has_custom_sprite() -> bool:
+	return card != null and card.specialty != null and card.specialty.texture != null
+
+
+## Distancia del centro al borde superior de las barras (para colocar textos encima).
+func overlay_top() -> float:
+	return _sprite_height * 0.5 + 10.0
+
+
+func _layout_overlays() -> void:
+	# Barra de vida montada sobre la coronilla y el nombre justo encima: así la tropa ocupa
+	# poco más que su casilla (80 px) y la etiqueta apenas pisa a la fila de arriba.
+	var top: float = -_sprite_height * 0.5 + 4.0
+	var bar: Control = get_node_or_null("HealthBar")
+	if bar:
+		bar.offset_left = -26.0
+		bar.offset_right = 26.0
+		bar.offset_top = top - 6.0
+		bar.offset_bottom = top
+	var rbar: Control = get_node_or_null("ReloadBar")
+	if rbar:
+		rbar.offset_left = -26.0
+		rbar.offset_right = 26.0
+		rbar.offset_top = top + 1.0
+		rbar.offset_bottom = top + 5.0
+	# Nombre y nivel en dos líneas cortas sobre las piernas de la propia tropa: quedan dentro de
+	# su casilla (80 px) y no pisan a las tropas de la fila de arriba, de abajo ni de los lados.
+	var label: Label = get_node_or_null("NameLabel")
+	if label:
+		var bottom: float = _sprite_height * 0.5
+		label.offset_left = -NAME_LABEL_HALF_W
+		label.offset_right = NAME_LABEL_HALF_W
+		label.offset_top = bottom - 27.0
+		label.offset_bottom = bottom - 2.0 # sin tocar la barra de vida de la fila de abajo
+		label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		label.clip_text = true
+		label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		label.add_theme_font_size_override("font_size", 10)
+		label.add_theme_constant_override("outline_size", 5)
+		label.add_theme_constant_override("line_spacing", -4)
+	for n in [bar, rbar, label]:
+		if n:
+			n.z_index = 10 # por encima de los sprites vecinos
+	_grab_radius = maxf(32.0, _sprite_height * 0.5)
+
+
+## Etiqueta en dos líneas cortas, dentro de la casilla: "Nombre" / "Nv.X 🔫".
+func _update_name_label() -> void:
+	var label: Label = get_node_or_null("NameLabel")
+	if not label or not card:
+		return
+	var w: WeaponData = card.get_weapon()
+	var emoji: String = w.emoji if w else ""
+	emoji = EMOJI_FALLBACK.get(emoji, emoji)
+	var nombre: String = ("☠ " + card.unit_name) if card.is_boss else card.unit_name
+	label.text = "%s\nNv.%d %s" % [nombre, card.level, emoji]
+	var col: Color = card.specialty.color if card.specialty else Color(1, 1, 1)
+	label.add_theme_color_override("font_color", col)
+
+
+func _style_bars() -> void:
+	var rbar: ProgressBar = get_node_or_null("ReloadBar")
+	if rbar:
+		var bg := StyleBoxFlat.new()
+		bg.bg_color = Color(0, 0, 0, 0.6)
+		var fg := StyleBoxFlat.new()
+		fg.bg_color = Color(1.0, 0.85, 0.15)
+		rbar.add_theme_stylebox_override("background", bg)
+		rbar.add_theme_stylebox_override("fill", fg)
+
+
+func update_team_color() -> void:
+	update_visuals()
+
+
+## Tinte del equipo + quemadura (naranja) + camuflaje (semitransparente) + destello al recibir daño.
+func update_visuals() -> void:
+	var sprite: Sprite2D = get_node_or_null("Sprite2D")
+	if not sprite:
+		return
+	var col: Color = PLAYER_TINT if team == Team.PLAYER else ENEMY_TINT
+	if statuses.has("burn"):
+		col = col.lerp(BURN_TINT, 0.65)
+	if _hurt_flash > 0.0:
+		col = col.lerp(Color(1.6, 1.6, 1.6), 0.5)
+	sprite.modulate = col
+	sprite.flip_h = team == Team.ENEMY
+	modulate.a = CAMO_ALPHA if camo_left > 0.0 else 1.0
+
+
+func update_health_bar() -> void:
+	var bar: ProgressBar = get_node_or_null("HealthBar")
+	if not bar:
+		return
+	bar.max_value = get_max_health()
+	bar.value = health
+	var fg := bar.get_theme_stylebox("fill") as StyleBoxFlat
+	if fg == null or not bar.has_theme_stylebox_override("fill"):
+		fg = StyleBoxFlat.new()
+		bar.add_theme_stylebox_override("fill", fg)
+		var bg := StyleBoxFlat.new()
+		bg.bg_color = Color(0, 0, 0, 0.6)
+		bar.add_theme_stylebox_override("background", bg)
+	fg.bg_color = Color(0.35, 0.85, 0.35) if team == Team.PLAYER else Color(0.9, 0.3, 0.25)
+
+
+func _update_reload_bar() -> void:
+	var rbar: ProgressBar = get_node_or_null("ReloadBar")
+	if not rbar:
+		return
+	rbar.visible = reloading
+	if reloading:
+		var total: float = maxf(0.01, float(stats.get("reload_time", 1.0)))
+		rbar.max_value = 1.0
+		rbar.value = clampf(1.0 - reload_left / total, 0.0, 1.0)
+
+
+func _fx_parent() -> Node:
+	var p := get_parent()
+	return p if p else get_tree().current_scene
+
+
+func show_text(txt: String, color: Color, size: int = 13, offset_y: float = 0.0) -> void:
+	CombatFX.text(_fx_parent(), global_position + Vector2(0, -overlay_top() - 34.0 + offset_y), txt, color, size)
+
+
+func show_heal_text(amount: float) -> void:
+	show_text("+%d" % roundi(amount), Color(0.45, 1.0, 0.45), 13)
+
+
+# ================================================================ getters (IA, estados y UI)
+
+func get_max_health() -> float:
+	return float(stats.get("max_health", 100.0))
+
+func get_attack_range() -> float:
+	return float(stats.get("attack_range", 150.0))
+
+func get_move_speed() -> float:
+	return float(stats.get("move_speed", 90.0))
+
+## Cadencia actual (con los buffs temporales de venganza, oficial, adrenalina...).
+func get_fire_rate() -> float:
+	var bonus := 0.0
+	for k in buffs:
+		if buffs[k].stat == "fire_rate_pct":
+			bonus += float(buffs[k].value)
+	return float(stats.get("fire_rate", 1.0)) * (1.0 + bonus)
+
+func get_attacks_per_second() -> float:
+	return get_fire_rate()
+
+## Daño de un impacto (arma × multiplicador de Daño).
+func get_damage() -> float:
+	return float(stats.get("hit_damage", 10.0))
+
+func get_crit_chance() -> float:
+	return float(stats.get("crit_chance", 0.0))
+
+func get_next_level_cost() -> int:
+	return card.get_level_up_cost() if card else 30
+
+## Probabilidad de acertar a una distancia (con caída por distancia).
+func hit_chance(dist: float, bonus: float = 0.0) -> float:
+	var p: float = float(stats.accuracy) + bonus \
+			- float(stats.accuracy_falloff) * maxf(0.0, dist - float(stats.optimal_range)) / 100.0
+	return clampf(p, TroopStats.MIN_ACCURACY, TroopStats.MAX_ACCURACY)
+
+## Compatibilidad con UI antigua: equipa un objeto en el card.
+func equip_item(item: Resource) -> void:
+	if card and item is ItemData and card.add_item(item):
+		refresh_from_card()
+		var bus = get_node_or_null("/root/EventBus")
+		if bus:
+			bus.roster_changed.emit()
+
+
+# ================================================================ combate
+
+func _physics_process(delta: float) -> void:
+	if not is_battle_started or is_dead:
+		velocity = Vector2.ZERO
+		return
+	_miss_text_cd -= delta
+	if _hurt_flash > 0.0:
+		_hurt_flash -= delta
+		if _hurt_flash <= 0.0:
+			update_visuals()
+	_tick_buffs(delta)
+	_tick_burn(delta)
+	if is_dead:
+		return
+	if camo_left > 0.0:
+		camo_left -= delta
+		if camo_left <= 0.0:
+			update_visuals()
+	if effects:
+		effects.on_process(delta)
+	if reloading:
+		reload_left -= delta
+		if reload_left <= 0.0:
+			reloading = false
+			ammo = int(stats.magazine)
+		_update_reload_bar()
+	if attack_cooldown > 0.0:
+		attack_cooldown -= delta
+	if not ai_enabled:
+		velocity = Vector2.ZERO
+		return
+
+	if not _is_valid_target(target):
+		find_target()
+	if target == null:
+		velocity = Vector2.ZERO
+		still_time += delta
+		return
+	var dist := global_position.distance_to(target.global_position)
+	if dist > get_attack_range():
+		still_time = 0.0
+		velocity = global_position.direction_to(target.global_position) * get_move_speed()
+		move_and_slide()
+	else:
+		velocity = Vector2.ZERO
+		still_time += delta
+		if attack_cooldown <= 0.0 and not reloading:
+			attack()
+
+
+func _is_valid_target(t) -> bool:
+	return t != null and is_instance_valid(t) and not t.is_queued_for_deletion() \
+			and "team" in t and t.team != team and not t.is_dead and t.camo_left <= 0.0
+
+
+## Enemigo vivo más cercano. Ignora a los camuflados (si solo quedan camuflados, espera).
+func find_target() -> void:
+	var closest := INF
+	target = null
+	for unit in get_tree().get_nodes_in_group("troops"):
+		if unit == self or not is_instance_valid(unit) or unit.has_meta("is_drag_preview"):
+			continue
+		if not _is_valid_target(unit):
+			continue
+		var d := global_position.distance_to(unit.global_position)
+		if d < closest:
+			closest = d
+			target = unit
+
+
+func attack() -> void:
+	if not _is_valid_target(target) or reloading:
+		return
+	if int(stats.magazine) > 0 and ammo <= 0:
+		_start_reload()
+		return
+	var bonus: Dictionary = effects.on_before_shot() if effects else {}
+	var w: WeaponData = stats.weapon
+	var dist := global_position.distance_to(target.global_position)
+	var p := hit_chance(dist, float(bonus.get("accuracy", 0.0)))
+	var crit_c: float = float(stats.crit_chance) + float(bonus.get("crit_chance", 0.0))
+	var base_dmg: float = float(stats.hit_damage) * (1.0 + float(bonus.get("damage_pct", 0.0)))
+	shots_fired += 1
+	var any_miss := false
+	for i in int(stats.pellets):
+		pellets_fired += 1
+		var hit: bool = (randf() < p) if force_hit < 0 else (force_hit == 1)
+		var crit: bool = hit and ((randf() < crit_c) if force_crit < 0 else (force_crit == 1))
+		var dmg: float = base_dmg * (float(stats.crit_multiplier) if crit else 1.0)
+		if hit:
+			hits += 1
+		else:
+			misses += 1
+			any_miss = true
+		if crit:
+			crits += 1
+		_fire_pellet(w, hit, crit, dmg, dist)
+	if any_miss:
+		_show_miss()
+	if w.projectile == WeaponData.Projectile.LLAMA:
+		_fire_cosmetic_flame(dist)
+	if int(stats.magazine) > 0:
+		ammo -= 1
+		if ammo <= 0:
+			_start_reload()
+	attack_cooldown = 1.0 / maxf(0.05, get_fire_rate())
+
+
+func _hit_info(dmg: float, crit: bool, w: WeaponData) -> Dictionary:
+	return {
+		"damage": dmg,
+		"crit": crit,
+		"headshot": crit and w.family == WeaponData.Family.PRECISION,
+		"burn_dps": float(stats.burn_dps),
+		"burn_duration": float(stats.burn_duration),
+		"attacker": self,
+	}
+
+
+func _fire_pellet(w: WeaponData, hit: bool, crit: bool, dmg: float, dist: float) -> void:
+	var info := _hit_info(dmg, crit, w)
+	var dir := global_position.direction_to(target.global_position)
+	if w.projectile == WeaponData.Projectile.NINGUNO:
+		# Cuerpo a cuerpo: impacto instantáneo con destello
+		if hit:
+			CombatFX.flash(_fx_parent(), target.global_position - dir * 8.0, Color(1, 1, 0.85, 0.9), 12.0)
+			CombatFX.apply_hit(target, info)
+		else:
+			CombatFX.flash(_fx_parent(), global_position + dir.rotated(0.6) * 30.0, Color(0.8, 0.8, 0.8, 0.5), 8.0)
+		return
+	var b = BULLET_SCENE.instantiate()
+	b.kind = w.projectile
+	b.family = w.family
+	b.speed = maxf(150.0, w.projectile_speed)
+	if w.projectile == WeaponData.Projectile.LLAMA:
+		b.speed = minf(b.speed, 260.0) # chorro más lento para que se vea
+	b.shooter_team = team
+	b.info = info
+	b.aoe_radius = float(stats.aoe_radius)
+	b.pierce = int(stats.pierce) if w.projectile == WeaponData.Projectile.BALA else 0
+	if int(stats.pellets) > 1:
+		b.visual_spread = randf_range(-0.12, 0.12)
+	if hit:
+		b.target = target
+		b.target_pos = target.global_position
+	else:
+		var dev := randf_range(0.25, 0.45) * (1.0 if randf() < 0.5 else -1.0)
+		b.is_miss = true
+		b.target_pos = global_position + dir.rotated(dev) * dist
+	b.position = global_position + dir * 14.0
+	_fx_parent().add_child(b)
+
+
+## Bocanadas extra (solo visuales) para que el lanzallamas parezca un chorro.
+func _fire_cosmetic_flame(dist: float) -> void:
+	for i in 3:
+		var b = BULLET_SCENE.instantiate()
+		b.kind = WeaponData.Projectile.LLAMA
+		b.cosmetic = true
+		b.is_miss = true
+		b.speed = randf_range(190.0, 270.0)
+		b.shooter_team = team
+		var dir := global_position.direction_to(target.global_position)
+		b.target_pos = global_position + dir.rotated(randf_range(-0.28, 0.28)) * minf(dist, get_attack_range()) * randf_range(0.55, 1.0)
+		b.position = global_position + dir * 14.0
+		_fx_parent().add_child(b)
+
+
+## Lanza una granada (objeto Granada): vuela en arco y explota donde esté el objetivo.
+func throw_grenade(tgt: Node2D, dmg: float, radius: float) -> void:
+	var b = BULLET_SCENE.instantiate()
+	b.kind = WeaponData.Projectile.GRANADA
+	b.speed = 320.0
+	b.shooter_team = team
+	b.info = {"damage": dmg, "crit": false, "headshot": false, "burn_dps": 0.0, "burn_duration": 0.0, "attacker": self, "grenade": true}
+	b.aoe_radius = radius
+	b.target = tgt
+	b.target_pos = tgt.global_position
+	b.position = global_position + Vector2(0, -10)
+	_fx_parent().add_child(b)
+	grenades_thrown += 1
+	show_text("¡Granada!", Color(0.75, 0.9, 0.45), 11, 6.0)
+
+
+func _show_miss() -> void:
+	if _miss_text_cd > 0.0:
+		return
+	_miss_text_cd = MISS_TEXT_COOLDOWN
+	show_text("¡Fallo!", Color(0.75, 0.75, 0.75), 12)
+
+
+func _start_reload() -> void:
+	if reloading or int(stats.magazine) <= 0:
+		return
+	reloading = true
+	reload_left = float(stats.reload_time)
+	reloads += 1
+	_update_reload_bar()
+
+
+## Llamado por CombatFX.apply_hit cuando un impacto de esta tropa llega a su víctima.
+func on_hit_landed(victim: Node, info: Dictionary, killed: bool) -> void:
+	if effects:
+		effects.on_hit(victim, info)
+	if killed:
+		kills += 1
+		if effects:
+			effects.on_kill(victim)
+
+
+## Recibe un impacto: esquiva → armadura → vida. Devuelve true si muere.
+func receive_hit(info: Dictionary) -> bool:
+	if is_dead:
+		return false
+	var dodged: bool = (randf() < float(stats.get("dodge", 0.0))) if force_dodge < 0 else (force_dodge == 1)
+	if dodged:
+		dodges += 1
+		show_text("¡Esquiva!", Color(0.5, 0.9, 1.0), 12)
+		return false
+	var amount: float = float(info.get("damage", 0.0)) * (1.0 - float(stats.get("armor", 0.0)))
+	if info.get("crit", false):
+		var txt := "¡En la cabeza!" if info.get("headshot", false) else "¡Crítico!"
+		show_text("%s %d" % [txt, roundi(amount)], Color(1.0, 0.85, 0.2), 14, -10.0)
+	if float(info.get("burn_dps", 0.0)) > 0.0:
+		apply_burn(float(info.burn_dps), maxf(float(info.get("burn_duration", 0.0)), 1.0))
+	return take_damage(amount)
+
+
+## Daño directo a la vida (sin esquiva ni armadura). Devuelve true si muere.
+func take_damage(amount: float) -> bool:
+	if is_dead:
+		return false
+	health -= amount
+	update_health_bar()
+	if health <= 0.0:
+		die()
+		return true
+	_hurt_flash = 0.08
+	update_visuals()
+	if effects:
+		effects.on_damaged(amount)
+	return false
+
+
+func heal(amount: float, show_popup: bool = true) -> float:
+	if is_dead or amount <= 0.0:
+		return 0.0
+	var real := minf(amount, get_max_health() - health)
+	if real <= 0.0:
+		return 0.0
+	health += real
+	update_health_bar()
+	if show_popup and real >= 0.5:
+		show_heal_text(real)
+	return real
+
+
+func apply_burn(dps: float, duration: float) -> void:
+	var b: Dictionary = statuses.get("burn", {"dps": 0.0, "left": 0.0, "tick": 0.0})
+	b.dps = maxf(float(b.dps), dps)
+	b.left = maxf(float(b.left), duration)
+	statuses["burn"] = b
+	update_visuals()
+
+
+func _tick_burn(delta: float) -> void:
+	if not statuses.has("burn"):
+		return
+	var b: Dictionary = statuses.burn
+	b.left -= delta
+	b.tick += delta
+	if b.tick >= BURN_TICK:
+		b.tick -= BURN_TICK
+		var dmg: float = float(b.dps) * BURN_TICK
+		burn_damage_taken += dmg
+		take_damage(dmg)
+	if b.left <= 0.0 and statuses.has("burn"):
+		statuses.erase("burn")
+		update_visuals()
+
+
+func add_buff(key: String, stat: String, value: float, duration: float) -> void:
+	buffs[key] = {"stat": stat, "value": value, "left": duration}
+
+
+func _tick_buffs(delta: float) -> void:
+	if buffs.is_empty():
+		return
+	for k in buffs.keys():
+		buffs[k].left -= delta
+		if buffs[k].left <= 0.0:
+			buffs.erase(k)
+
+
+func die() -> void:
+	if is_dead:
+		return
+	is_dead = true
+	health = 0.0
+	remove_from_group("troops")
+	CombatFX.flash(_fx_parent(), global_position, Color(1, 1, 1, 0.5), 26.0, 0.3)
+	for t in get_tree().get_nodes_in_group("troops"):
+		if is_instance_valid(t) and t != self and "team" in t and t.team == team and t.effects:
+			t.effects.on_ally_died(self)
+	died.emit(self)
+	queue_free()

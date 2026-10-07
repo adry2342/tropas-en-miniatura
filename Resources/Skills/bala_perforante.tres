@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "bala_perforante"
+display_name = "Bala perforante"
+description = "Sus balas atraviesan a 1 enemigo más."
+emoji = "🏹"
+rarity = 1
+specialty_id = "francotirador"
+modifiers = {"pierce": 1.0}

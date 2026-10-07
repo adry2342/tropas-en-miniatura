@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="TroopData" format=3 uid="uid://b3w58nxikwibk"]
+
+[ext_resource type="Script" uid="uid://dvmq6bni2mig4" path="res://Scripts/Resources/item_data.gd" id="1_item_data"]
+[ext_resource type="Script" uid="uid://r15jf2r8b4be" path="res://Scripts/Resources/troop_data.gd" id="1_troop_data"]
+[ext_resource type="Resource" path="res://Resources/Items/Unique/francotirador_mira_laser.tres" id="2_u"]
+[ext_resource type="Resource" path="res://Resources/Items/Unique/francotirador_traje_ghillie.tres" id="3_u"]
+[ext_resource type="Resource" path="res://Resources/Items/Unique/francotirador_bala_perforante.tres" id="4_u"]
+
+[resource]
+script = ExtResource("1_troop_data")
+recruit_cost = 65
+display_name = "Francotirador"
+max_health = 70.0
+damage = 35.0
+move_speed = 80.0
+attack_range = 420.0
+attacks_per_second = 0.5
+critical_multiplier = 2.0
+level_items = Array[ExtResource("1_item_data")]([ExtResource("2_u"), ExtResource("3_u"), ExtResource("4_u")])

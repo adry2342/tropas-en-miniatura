@@ -1,0 +1,84 @@
+class_name DeploymentGrid
+extends Node2D
+
+@export var columns: int = 4
+@export var rows: int = 3
+@export var cell_size: Vector2 = Vector2(80, 80)
+@export var grid_origin: Vector2 = Vector2(100, 200)
+
+var grid_cells: Array[Vector2] = []
+
+
+func _ready() -> void:
+	_generate_grid_positions()
+	
+	var bus = get_node_or_null("/root/EventBus")
+	if bus:
+		bus.battle_fight_started.connect(_on_battle_fight_started)
+
+
+func _on_battle_fight_started() -> void:
+	hide()
+
+
+func _generate_grid_positions() -> void:
+	grid_cells.clear()
+	for r in range(rows):
+		for c in range(columns):
+			var pos = grid_origin + Vector2(c * cell_size.x + cell_size.x * 0.5, r * cell_size.y + cell_size.y * 0.5)
+			grid_cells.append(pos)
+
+
+func _draw() -> void:
+	if not is_visible_in_tree():
+		return
+	
+	for r in range(rows):
+		for c in range(columns):
+			var rect_min = grid_origin + Vector2(c * cell_size.x, r * cell_size.y)
+			var rect = Rect2(rect_min, cell_size)
+			draw_rect(rect, Color(0.2, 0.5, 0.9, 0.2), true)
+			draw_rect(rect, Color(0.4, 0.7, 1.0, 0.7), false, 2.0)
+
+
+func get_snapped_position(global_pos: Vector2) -> Vector2:
+	if grid_cells.is_empty():
+		return global_pos
+	
+	var closest_pos = grid_cells[0]
+	var min_dist = global_pos.distance_to(closest_pos)
+	
+	for cell_pos in grid_cells:
+		var dist = global_pos.distance_to(cell_pos)
+		if dist < min_dist:
+			min_dist = dist
+			closest_pos = cell_pos
+	
+	return closest_pos
+
+
+## Tropa del jugador que ocupa esa casilla (null si está libre). Ignora a `ignore`,
+## a las tropas que se están arrastrando y a las previsualizaciones de la reserva.
+func get_occupant(cell_pos: Vector2, ignore: Node = null) -> Node:
+	for unit in get_tree().get_nodes_in_group("troops"):
+		if unit == ignore or not is_instance_valid(unit) or unit.is_queued_for_deletion():
+			continue
+		if unit.team != unit.Team.PLAYER or unit.has_meta("is_drag_preview") or unit.is_dragging:
+			continue
+		if unit.global_position.distance_to(cell_pos) < 1.0:
+			return unit
+	return null
+
+
+## Casilla libre más cercana a la posición dada. Devuelve Vector2.INF si no queda ninguna.
+func get_nearest_free_position(global_pos: Vector2, ignore: Node = null) -> Vector2:
+	var best: Vector2 = Vector2.INF
+	var best_dist: float = INF
+	for cell_pos in grid_cells:
+		if get_occupant(cell_pos, ignore) != null:
+			continue
+		var dist: float = global_pos.distance_to(cell_pos)
+		if dist < best_dist:
+			best_dist = dist
+			best = cell_pos
+	return best

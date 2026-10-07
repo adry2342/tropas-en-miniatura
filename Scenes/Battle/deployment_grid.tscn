@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Battle/deployment_grid.gd" id="1_grid"]
+
+[node name="DeploymentGrid" type="Node2D"]
+script = ExtResource("1_grid")

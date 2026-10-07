@@ -1,0 +1,20 @@
+# Godot 4+
+.godot/
+/android/
+
+# Exportaciones (el .exe y el .pck se generan desde Godot)
+*.exe
+*.pck
+/build/
+/export/
+
+# Pruebas: capturas que se regeneran al pasar los tests
+_dev/shots/
+_dev/godot.lock
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+~$*

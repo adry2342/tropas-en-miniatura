@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "balas_trazadoras"
+display_name = "Balas trazadoras"
+description = "+10 % de precisión y +10 % de alcance."
+emoji = "✨"
+rarity = 0
+specialty_id = "municionero"
+modifiers = {"accuracy": 0.1, "range_pct": 0.1}

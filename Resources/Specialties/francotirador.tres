@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpecialtyData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/specialty_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "francotirador"
+display_name = "Francotirador"
+emoji = "🎯"
+color = Color(0.55, 0.75, 1.0, 1)
+affine_families = Array[int]([3])
+description = "Tirador de élite a larga distancia. Afín a armas de precisión. Elige a quién abatir."
+passive_name = "Tirador de élite"
+passive_description = "Apunta al enemigo más peligroso a su alcance (francotiradores, bazucas, doctores, radios) en vez de al más cercano. Quieto 1 s: +15 % de precisión y +10 % de crítico."
+passive_effect_id = "paciencia"
+passive_params = {"still_time": 1.0, "accuracy": 0.15, "crit_chance": 0.1}
+modifiers = {}
+extra_effects = {"tirador_elite": {"crit_vs_pinned": 0.25}}
+synergy_text = "+25 % de crítico contra enemigos suprimidos (Soldado) o marcados (Radioperador). Protégelo con primera línea: de cerca falla mucho."

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpecialtyData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/specialty_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "comunicaciones"
+display_name = "Radioperador"
+emoji = "📡"
+color = Color(0.4, 0.9, 0.9, 1)
+affine_families = Array[int]([0, 1])
+description = "Comunicaciones e inteligencia. Afín a pistolas y automáticas. Sin él no sabes dónde está el enemigo."
+passive_name = "Reconocimiento y apoyo"
+passive_description = "Desplegado en el tablero, muestra el mapa de calor del enemigo durante la planificación. En combate marca cada 4 s al enemigo más peligroso (+15 % de daño recibido, pierde el camuflaje y atrae el fuego) y una vez pide artillería sobre el grupo enemigo más denso."
+passive_effect_id = "radio"
+passive_params = {"mark_interval": 4.0, "mark_duration": 4.0, "mark_bonus": 0.15, "mark_range": 450.0, "artillery_delay": 6.0, "shells": 3, "shell_damage": 26.0, "shell_radius": 60.0}
+modifiers = {}
+extra_effects = {}
+synergy_text = "Sus marcas dan +25 % de crítico a los Francotiradores y todo el pelotón remata antes al marcado."

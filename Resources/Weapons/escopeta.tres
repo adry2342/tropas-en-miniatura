@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/weapon_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "escopeta"
+display_name = "Escopeta"
+emoji = "💥"
+family = 2
+rarity = 0
+description = "5 perdigones. Devastadora de cerca (casi no falla encima del enemigo), inútil de lejos."
+damage = 4.5
+fire_rate = 0.75
+attack_range = 175.0
+accuracy = 0.62
+optimal_range = 75.0
+accuracy_falloff = 0.35
+magazine = 4
+reload_time = 2.2
+crit_chance = 0.05
+crit_multiplier = 1.5
+pellets = 5
+projectile_speed = 650.0
+recruit_pool = true
+min_round = 1
+close_bonus = 0.33
+fire_on_move = true

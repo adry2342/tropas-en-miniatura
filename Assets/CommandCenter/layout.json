@@ -1,0 +1,126 @@
+{
+  "room_size": {
+    "w": 1920,
+    "h": 1080
+  },
+  "objects": [
+    {
+      "name": "war_table",
+      "file": "war_table.png",
+      "x": 593,
+      "y": 458,
+      "w": 827,
+      "h": 487
+    },
+    {
+      "name": "specialty_terminal",
+      "file": "specialty_terminal.png",
+      "x": 1103,
+      "y": 51,
+      "w": 458,
+      "h": 508
+    },
+    {
+      "name": "hangar_door",
+      "file": "hangar_door.png",
+      "x": 1518,
+      "y": 23,
+      "w": 383,
+      "h": 490
+    },
+    {
+      "name": "archive",
+      "file": "archive.png",
+      "x": 1395,
+      "y": 614,
+      "w": 519,
+      "h": 400
+    },
+    {
+      "name": "radio_station",
+      "file": "radio_station.png",
+      "x": 16,
+      "y": 590,
+      "w": 457,
+      "h": 427
+    }
+  ],
+  "labels": {
+    "war_table": [
+      1000,
+      912
+    ],
+    "specialty_terminal": [
+      1420,
+      516
+    ],
+    "hangar_door": [
+      1712,
+      500
+    ],
+    "archive": [
+      1650,
+      1036
+    ],
+    "radio_station": [
+      240,
+      1036
+    ],
+    "tubes": [
+      [
+        120,
+        530
+      ],
+      [
+        260,
+        530
+      ],
+      [
+        400,
+        530
+      ],
+      [
+        540,
+        530
+      ],
+      [
+        680,
+        530
+      ]
+    ]
+  },
+  "tube_back_file": "cryo_tube_back.png",
+  "tube_front_file": "cryo_tube_front.png",
+  "tube_size": {
+    "w": 212,
+    "h": 458
+  },
+  "tube_slot": {
+    "x": 58,
+    "y": 175,
+    "w": 100,
+    "h": 180
+  },
+  "tubes": [
+    {
+      "x": 12,
+      "y": 87
+    },
+    {
+      "x": 152,
+      "y": 87
+    },
+    {
+      "x": 292,
+      "y": 87
+    },
+    {
+      "x": 432,
+      "y": 87
+    },
+    {
+      "x": 572,
+      "y": 87
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/item_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "balas_incendiarias"
+display_name = "Balas incendiarias"
+description = "Los impactos queman: 5 de daño/s durante 3 s."
+emoji = "🔥"
+rarity = 1
+slot = 0
+modifiers = {"burn_dps": 5.0}

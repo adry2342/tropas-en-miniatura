@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "recarga_rapida"
+display_name = "Recarga rápida"
+description = "Recarga un 25 % más rápido."
+emoji = "🔄"
+rarity = 0
+specialty_id = ""
+modifiers = {"reload_pct": -0.25}

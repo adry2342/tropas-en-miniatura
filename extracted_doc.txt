@@ -1,0 +1,473 @@
+TROPAS EN MINIATURA
+
+Documento de diseño del juego (GDD) — versión 2
+
+Auto-battler roguelite 2D · Godot 4.7
+
+Actualizado el 3 de octubre de 2026
+
+Leyenda de estados: HECHO ya funciona en el juego NUEVO diseño nuevo de esta versión PENDIENTE previsto, sin empezar
+
+Índice
+
+0. Visión del juego
+
+1. Escenas principales
+
+2. Tropas y estadísticas
+
+3. Armas
+
+4. Especialidades
+
+5. Subida de nivel y habilidades
+
+6. Objetos y equipo
+
+7. Economía y obtención
+
+8. Combate automático
+
+9. Interfaz (UI / HUD)
+
+10. Arquitectura técnica
+
+11. Arte y audio
+
+12. Decisiones pendientes
+
+13. Hoja de ruta
+
+0. Visión del juego
+
+Tropas en miniatura es un auto-battler roguelite 2D. El jugador recluta un pequeño ejército, lo coloca en el tablero antes de cada ronda y las tropas luchan solas. Entre rondas mejora a sus tropas con armas, equipo y habilidades. Las rondas son infinitas y cada vez más difíciles, hasta que una ruleta saca al jefe final.
+
+Inspiración: el antiguo juego de navegador Mini Troopers, solo como referencia para la idea de armas, especialidades y subida de nivel eligiendo entre dos habilidades. No se copia su contenido: armas, habilidades y especialidades son propias.
+
+Idea central del diseño: la tropa es casi solo un cuerpo (Vida y Daño). Su personalidad sale del arma que lleva, de su equipo y de las habilidades que va eligiendo al subir de nivel. Así cada partida acaba con un ejército distinto.
+
+El juego se divide en tres bloques:
+
+1.  Interfaz y flujo (escenas y UI).
+
+2.  Lógica (combate, progresión, economía).
+
+3.  Contenido (tropas, armas, habilidades, objetos, enemigos).
+
+1. Escenas principales
+
+1.1 Pantalla de inicio
+
+HECHO Menú principal con nombre del juego.
+
+-   Botones: Start (empieza una partida), Opciones y Salir.
+
+1.2 Menú de opciones
+
+PENDIENTE Volumen general, música y efectos; resolución y pantalla completa; idioma (opcional). Se guarda en un archivo de configuración.
+
+1.3 Selección de tropa inicial
+
+HECHO Se elige la tropa con la que empieza la partida: Soldado, Francotirador o Granadero.
+
+-   Con el nuevo sistema, cada especialidad empieza con un arma aleatoria de su familia (ver sección 4).
+
+1.4 Pantalla de ronda y ruleta del jefe
+
+HECHO Sustituye al mapa de caminos ramificados del primer GDD.
+
+-   Muestra “RONDA N” y la probabilidad de que salga el jefe.
+
+-   Una ruleta (barra verde con zona roja del jefe) decide el tipo de ronda: Normal, Élite (20 % desde la ronda 3) o Jefe.
+
+-   Cada ronda ganada suma +2 % de probabilidad de jefe. La ruleta gira una sola vez por ronda; clic en la barra para saltar la animación.
+
+1.5 Planificación y combate
+
+HECHO El corazón del juego.
+
+-   Planificación: el jugador coloca hasta 6 tropas en la cuadrícula desde el panel de Ejército. Puede retirar tropas a la reserva, subirlas de nivel y reclutar en la tienda.
+
+-   Mapa de calor: los enemigos están ocultos. Solo se ve una mancha de calor roja que no revela cuántos son, de qué tipo ni qué nivel tienen. Al empezar el combate se revelan.
+
+-   Combate: las tropas se mueven y atacan solas en tiempo real. Las reglas nuevas de combate están en la sección 8.
+
+1.6 Pantalla de recompensas
+
+HECHO Ahora da oro y muestra la probabilidad de jefe de la ronda siguiente.
+
+NUEVO Elegir 1 de 3 cartas: arma, objeto u oro. La rareza mejora con la ronda y las rondas élite dan mejor botín (ver sección 7).
+
+1.7 Jefe final
+
+HECHO Sale por la ruleta. Escala con la ronda en la que aparece y trae escoltas. Derrotarlo gana la partida (“¡VICTORIA! Jefe derrotado en la ronda N”). Perder muestra la ronda alcanzada.
+
+1.8 Modo infinito y ranking
+
+HECHO Las rondas ya son infinitas con dificultad incremental: es la base del juego.
+
+PENDIENTE Ranking (por ejemplo, ronda máxima alcanzada o ronda en la que cayó el jefe).
+
+1.9 Guardado y carga
+
+PENDIENTE Guardar el ejército (tropas, nivel, XP, arma, equipo, habilidades), la ronda actual y los ajustes.
+
+2. Tropas y estadísticas
+
+NUEVO Se simplifican las estadísticas de la tropa.
+
+Una tropa solo tiene dos estadísticas propias:
+
+  ------------------------------------------------------------------------------------------------------------
+  Estadística       Qué hace
+  ----------------- ------------------------------------------------------------------------------------------
+  Vida              Cuánto daño aguanta antes de caer.
+
+  Daño              Multiplicador del daño de su arma (100 % = normal). Sube con el nivel y con habilidades.
+  ------------------------------------------------------------------------------------------------------------
+
+Todo lo demás sale de fuera de la tropa:
+
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Atributo                                                   De dónde sale
+  ---------------------------------------------------------- -----------------------------------------------------------------------------------------------------------------------------
+  Alcance, cadencia, precisión, cargador, recarga, crítico   Del arma.
+
+  Velocidad de movimiento                                    Valor común para todas las tropas; lo cambian el equipo y las habilidades (una armadura pesada frena, “Velocista” acelera).
+
+  Reducción de daño, esquiva, efectos especiales             Del equipo y las habilidades.
+  ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-   Ninguna tropa tiene crítico de base (ya aplicado). El crítico llega por el arma, el equipo y las habilidades.
+
+-   Cada tropa guarda: especialidad, nivel, XP, arma, 3 huecos de equipo y la lista de habilidades.
+
+-   El ejército tiene un máximo de 6 tropas en total (tablero + reserva).
+
+3. Armas
+
+NUEVO Es el centro del sistema: cada tropa lleva 1 arma y es lo que más define cómo juega.
+
+3.1 Atributos de un arma
+
+  -----------------------------------------------------------------------------------------------------------------
+  Atributo           Descripción
+  ------------------ ----------------------------------------------------------------------------------------------
+  Daño por disparo   Daño base de cada impacto (se multiplica por el Daño de la tropa).
+
+  Cadencia           Disparos por segundo.
+
+  Alcance            Distancia a la que puede disparar.
+
+  Precisión          Probabilidad de acertar; baja con la distancia. Un fallo muestra “¡Fallo!”.
+
+  Cargador           Disparos antes de recargar.
+
+  Recarga            Segundos que pasa recargando. Crea ritmo en el combate.
+
+  Crítico            Probabilidad y multiplicador de crítico.
+
+  Proyectiles        Perdigones por disparo (escopeta).
+
+  Área               Radio de explosión (lanzagranadas, bazuca).
+
+  Familia            Pistolas, automáticas, escopetas, rifles de precisión, pesadas, explosivos, cuerpo a cuerpo.
+
+  Rareza             Común, rara, épica o legendaria; las raras pueden traer un efecto extra.
+  -----------------------------------------------------------------------------------------------------------------
+
+3.2 Armas iniciales
+
+Lista inicial orientativa. Los números se fijan en la fase de equilibrado.
+
+  -------------------------------------------------------------------------------------
+  Arma                     Familia           Cómo juega
+  ------------------------ ----------------- ------------------------------------------
+  Pistola                  Pistolas          Floja pero fiable, recarga rápida.
+
+  Subfusil                 Automáticas       Mucha cadencia, poca precisión de lejos.
+
+  Fusil de asalto          Automáticas       Equilibrado en todo.
+
+  Escopeta                 Escopetas         Varios perdigones, brutal de cerca.
+
+  Rifle de francotirador   Precisión         Mucho daño y precisión, muy lento.
+
+  Ametralladora            Pesadas           Cargador enorme, recarga larguísima.
+
+  Lanzagranadas            Explosivos        Daño en área con tiro en arco.
+
+  Bazuca                   Explosivos        Un solo tiro, daño enorme en área.
+
+  Lanzallamas              Pesadas           Corto alcance, quema con el tiempo.
+
+  Cuchillo                 Cuerpo a cuerpo   Ataca de cerca y nunca recarga.
+  -------------------------------------------------------------------------------------
+
+-   Críticos con sabor a partes del cuerpo (idea del primer GDD): un crítico con rifle muestra “¡Disparo en la cabeza!”, con escopeta “¡A quemarropa!”, etc.
+
+4. Especialidades
+
+NUEVO La especialidad deja de dar estadísticas. Da identidad.
+
+Cada especialidad aporta:
+
+-   Afinidad con una familia de armas: un bonus cuando usa armas de su familia.
+
+-   Una pasiva propia.
+
+-   Su propio conjunto de habilidades para las subidas de nivel, además de las habilidades generales.
+
+-   En la tienda, una tropa nueva sale con un arma aleatoria de su familia.
+
+  ----------------------------------------------------------------------------------------------------------------------------------
+  Especialidad              Familia afín                  Pasiva (ejemplo)                                         Estado
+  ------------------------- ----------------------------- -------------------------------------------------------- -----------------
+  Soldado                   Automáticas y pistolas        Recarga un 20 % más rápido.                              Existe; adaptar
+
+  Francotirador             Rifles de precisión           +precisión si no se ha movido en los últimos segundos.   Existe; adaptar
+
+  Granadero                 Explosivos                    Sus explosiones no dañan a sus aliados.                  Existe; adaptar
+
+  Médico                    Pistolas                      Cura poco a poco al aliado más herido cercano.           Futuro
+
+  Explorador                Escopetas y cuerpo a cuerpo   Se mueve más rápido y esquiva más.                       Futuro
+
+  Artificiero / Ingeniero   Pesadas                       Coloca una torreta o mina al empezar.                    Futuro
+  ----------------------------------------------------------------------------------------------------------------------------------
+
+  Decisión pendiente: si cualquier tropa puede llevar cualquier arma (solo con bonus en su familia) o si cada especialidad solo puede usar las suyas. Ver sección 12.
+
+5. Subida de nivel y habilidades
+
+NUEVO Sustituye a los objetos únicos que se reciben ahora al subir a Nv2, Nv3 y Nv4.
+
+5.1 Cómo se sube de nivel
+
+-   La tropa gana XP en combate (por matar y por ganar la ronda), como pedía el primer GDD.
+
+-   El oro puede acelerar la subida (como ahora). Ver decisión pendiente en la sección 12.
+
+-   Cada subida aumenta un poco Vida y Daño.
+
+-   Nivel máximo orientativo: 10.
+
+5.2 Elección 1 de 2
+
+-   Al subir de nivel salen 2 habilidades al azar del conjunto general + el de su especialidad. El jugador elige una; la otra se descarta.
+
+-   Las habilidades tienen rareza (común, rara, épica): las raras salen menos y son más fuertes.
+
+-   Cadenas: algunas habilidades solo pueden salir si ya tienes otra antes (por ejemplo, “Granada” → “Granada de racimo”). Así el jugador construye un estilo.
+
+-   No se repite una habilidad que ya se tiene (salvo las marcadas como acumulables).
+
+5.3 Tipos de habilidad
+
+  --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Tipo             Qué hace                          Ejemplos
+  ---------------- --------------------------------- -----------------------------------------------------------------------------------------------------------------
+  Estadística      Mejora un número.                 +Vida, +precisión, +crítico (aquí entra el crítico de las subidas de nivel).
+
+  Comportamiento   Cambia cómo actúa la tropa.       Camuflaje (no le apuntan los primeros 3 s), Esquiva (15 % de evitar un impacto), Cobertura (menos daño quieto).
+
+  Activa           Se usa sola cada cierto tiempo.   Lanzar granada, botiquín, disparo cargado.
+
+  Condicional      Se activa en una situación.       Último en pie (+daño si es el último vivo), Venganza (+cadencia cuando cae un aliado).
+
+  De equipo        Aura para aliados cercanos.       Oficial (+cadencia a los cercanos).
+
+  De arma          Mejora o amplía el arma.          Cargador ampliado, Balas perforantes, segunda arma.
+  --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+5.4 Lista inicial orientativa (15–20 habilidades)
+
+  ------------------------------------------------------------------------------------------
+  Habilidad             Conjunto        Efecto
+  --------------------- --------------- ----------------------------------------------------
+  Piel dura             General         +Vida.
+
+  Pulso firme           General         +precisión.
+
+  Ojo certero           General         +probabilidad de crítico.
+
+  Velocista             General         +velocidad de movimiento.
+
+  Esquiva               General         Probabilidad de evitar un impacto.
+
+  Camuflaje             General         No le apuntan los primeros segundos del combate.
+
+  Último en pie         General         +daño si es la última tropa viva.
+
+  Venganza              General         +cadencia durante unos segundos al caer un aliado.
+
+  Botiquín              General         Se cura una vez al bajar de cierta vida.
+
+  Cargador ampliado     Soldado         +balas por cargador.
+
+  Oficial               Soldado         Aura de +cadencia a aliados cercanos.
+
+  Instinto veterano     Soldado         +crítico y +daño a corta distancia.
+
+  Mira láser            Francotirador   +crítico y +precisión.
+
+  Bala perforante       Francotirador   El disparo atraviesa a un segundo enemigo.
+
+  Traje ghillie         Francotirador   Camuflaje más largo.
+
+  Granada               Granadero       Lanza una granada cada X segundos.
+
+  Granada de racimo     Granadero       Requiere Granada: se divide en varias explosiones.
+
+  Granada termobárica   Granadero       +radio y quemadura en las explosiones.
+
+  Blindaje pesado       Granadero       +Vida y reducción de daño, menos velocidad.
+  ------------------------------------------------------------------------------------------
+
+  Los 9 objetos únicos actuales (Casco reforzado, Mira láser, Granada termobárica, etc.) se reconvierten en habilidades de su especialidad.
+
+6. Objetos y equipo
+
+NUEVO El equipo va aparte del arma.
+
+Cada tropa tiene 3 huecos:
+
+  --------------------------------------------------------------------------------------------------------------------------------------
+  Hueco          Qué va                                                 Ejemplos
+  -------------- ------------------------------------------------------ ----------------------------------------------------------------
+  Arma           Un arma (sección 3).                                   Fusil de asalto, escopeta…
+
+  Armadura       Más vida o reducción de daño, a cambio de velocidad.   Chaleco táctico, blindaje ligero, blindaje pesado.
+
+  Accesorio      Efectos variados.                                      Mira telescópica, balas huecas, inyector de adrenalina, botas.
+  --------------------------------------------------------------------------------------------------------------------------------------
+
+-   Rarezas del primer GDD: común, rara, épica, legendaria. Cuanto más rara, más fuerte y más probable que traiga un efecto especial.
+
+-   Se equipan arrastrando en el submenú de la tropa. Lo que no lleva nadie queda en el inventario del ejército.
+
+-   Los 4 objetos sueltos actuales (Balas huecas, Chaleco táctico, Inyector de adrenalina, Mira telescópica) pasan a ser armaduras y accesorios.
+
+7. Economía y obtención
+
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Fuente                    Qué da                                                                                                       Estado
+  ------------------------- ------------------------------------------------------------------------------------------------------------ --------------------------
+  Victoria de ronda         Oro + elegir 1 de 3 cartas (arma, objeto u oro). La rareza mejora con la ronda; las élite dan mejor botín.   Oro hecho; cartas nuevas
+
+  Tienda de reclutamiento   Reclutar tropas (Soldado 40, Francotirador 65, Granadero 80 de oro) con arma aleatoria de su familia.        Hecho; arma nueva
+
+  Tienda (ampliación)       A veces vende un arma o un objeto.                                                                           Nuevo
+
+  Combate                   XP para las tropas que participan.                                                                           Nuevo
+
+  Oro                       Reclutar, comprar y acelerar subidas de nivel.                                                               Hecho
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+8. Combate automático
+
+HECHO Movimiento hacia el enemigo, ataque automático, cuadrícula de despliegue, enemigos escalados por ronda, jefe con escoltas.
+
+NUEVO Reglas y feedback para el nuevo sistema:
+
+-   Precisión y fallos: cada disparo puede fallar; texto flotante “¡Fallo!”.
+
+-   Cargador y recarga: barrita de recarga sobre la tropa.
+
+-   Críticos: texto “¡Crítico!” o la variante de parte del cuerpo.
+
+-   Explosiones con radio, perdigones de escopeta y quemaduras del lanzallamas.
+
+-   Habilidades activas y auras: iconos pequeños sobre la tropa.
+
+-   Los enemigos usan el mismo sistema de armas, así el jugador puede leer qué tiene delante una vez revelado.
+
+8.1 Dificultad (hecho)
+
+-   Por ronda: +10 % de vida y +7 % de daño a los enemigos.
+
+-   Número de enemigos: mínimo 1 + ronda/4, máximo 2 + ronda/2, tope 8.
+
+-   Élite: +30 % vida, +20 % daño y un enemigo más. Jefe: ×3,5 vida, ×2 daño y escoltas.
+
+-   Con armas nuevas, los enemigos de rondas altas también llevarán armas mejores.
+
+9. Interfaz (UI / HUD)
+
+HECHO Panel de Ejército, submenú de tropa, tienda de reclutamiento, ruleta, mapa de calor, barras de vida.
+
+NUEVO Pantallas nuevas:
+
+-   Submenú de tropa: arma, 3 huecos de equipo, lista de habilidades y estadísticas finales con tooltips.
+
+-   Pantalla de subida de nivel: 2 cartas de habilidad para elegir.
+
+-   Pantalla de recompensas: 3 cartas para elegir.
+
+-   Inventario del ejército: armas y objetos sin equipar.
+
+PENDIENTE Menú de pausa con volver / continuar.
+
+10. Arquitectura técnica
+
+  --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Pieza                      Descripción
+  -------------------------- -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  WeaponData (recurso)       Atributos del arma de la sección 3.1.
+
+  SkillData (recurso)        Nombre, descripción, rareza, conjunto (general o especialidad), requisito, acumulable y efecto.
+
+  ItemData (ampliado)        Añade el hueco (armadura o accesorio) y efectos.
+
+  TroopData (simplificado)   Solo vida, daño, especialidad, familia afín, pasiva y precio de reclutamiento.
+
+  TroopCard (ampliado)       Nivel, XP, arma, equipo y habilidades de cada tropa; persiste entre rondas.
+
+  Cálculo de estadísticas    Un único sitio suma tropa + arma + equipo + habilidades para dar cada estadística final.
+
+  Ganchos de combate         Las habilidades reaccionan a momentos: al empezar, al disparar, al impactar, al recibir daño, al matar y al caer un aliado. Añadir una habilidad nueva es crear un recurso y su efecto.
+  --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+11. Arte y audio
+
+-   Sprites 2D sencillos. El Soldado ya tiene sprite; faltan Francotirador y Granadero.
+
+-   Sprites o iconos para cada arma, que se vean en la mano de la tropa.
+
+-   Efectos de disparo, impacto, explosión, curación y recarga.
+
+-   Música de menú, combate, victoria y derrota; sonidos por familia de arma.
+
+12. Decisiones pendientes
+
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Decisión                Opciones                                                                                    Recomendación
+  ----------------------- ------------------------------------------------------------------------------------------- ----------------------------------------------------------------------------------------------------------------
+  Daño de la tropa        Multiplicador del arma, o bonus fijo por disparo.                                           Multiplicador. Con bonus fijo, las armas de muchos disparos (escopeta, subfusil) salen demasiado beneficiadas.
+
+  Cómo se sube de nivel   XP de combate, oro como ahora, o ambas.                                                     Ambas: XP de combate como vía principal y oro para acelerar.
+
+  Restricción de armas    Cualquier tropa lleva cualquier arma (con bonus en su familia), o solo las de su familia.   Cualquier arma con bonus en su familia: más combinaciones y menos botín inútil.
+  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+13. Hoja de ruta
+
+Cada fase deja el juego jugable al terminarla.
+
+  -------------------------------------------------------------------------------------------------------------------------------------------------
+  Fase                       Contenido
+  -------------------------- ----------------------------------------------------------------------------------------------------------------------
+  1. Armas                   Simplificar la tropa a Vida y Daño. Recurso de arma, 10 armas, precisión, cargador, recarga, área y feedback visual.
+
+  2. Equipo                  3 huecos, inventario del ejército y nuevo submenú de tropa.
+
+  3. Niveles y habilidades   XP, pantalla de elección 1 de 2, ganchos de combate y 15–20 habilidades.
+
+  4. Botín                   Recompensas 1 de 3 y armas u objetos en la tienda.
+
+  5. Contenido               Más armas, habilidades y especialidades (Médico, Explorador, Ingeniero).
+
+  6. Equilibrado             Ajustar números con partidas de prueba.
+
+  7. Resto del GDD           Opciones, guardado, pausa, ranking, arte y audio.
+  -------------------------------------------------------------------------------------------------------------------------------------------------

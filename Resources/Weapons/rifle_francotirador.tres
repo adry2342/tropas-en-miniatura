@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://bgxdsweu2yp6t"]
+
+[ext_resource type="Script" uid="uid://c24ufm7qxjps6" path="res://Scripts/Resources/weapon_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "rifle_francotirador"
+display_name = "Rifle de francotirador"
+description = "Alcance enorme y daño alto. Dispara parado, muy lento, y con un enemigo encima falla mucho."
+emoji = "🎯"
+family = 3
+rarity = 1
+damage = 45.0
+fire_rate = 0.3
+attack_range = 620.0
+accuracy = 0.93
+optimal_range = 460.0
+accuracy_falloff = 0.04
+magazine = 3
+reload_time = 2.5
+crit_chance = 0.15
+crit_multiplier = 2.0
+projectile_speed = 1100.0
+min_round = 4
+close_bonus = -0.35
+move_speed_mult = 0.95

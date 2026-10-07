@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/item_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "balas_huecas"
+display_name = "Balas de punta hueca"
+description = "+15 % de daño."
+emoji = "🩸"
+rarity = 0
+slot = 0
+modifiers = {"damage_pct": 0.15}

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/weapon_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "pistola"
+display_name = "Pistola"
+emoji = "🔫"
+family = 0
+rarity = 0
+description = "Floja pero fiable. Hay que acercarse: a quemarropa casi no falla."
+damage = 9.0
+fire_rate = 1.6
+attack_range = 200.0
+accuracy = 0.78
+optimal_range = 110.0
+accuracy_falloff = 0.25
+magazine = 7
+reload_time = 1.0
+crit_chance = 0.05
+crit_multiplier = 1.8
+projectile_speed = 700.0
+recruit_pool = true
+min_round = 1
+close_bonus = 0.18
+fire_on_move = true
+move_speed_mult = 1.05
