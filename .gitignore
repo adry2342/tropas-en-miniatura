@@ -18,3 +18,9 @@ Thumbs.db
 desktop.ini
 *.tmp
 ~$*
+
+# Builds de releases
+_release/
+_dev/release/job.json
+_dev/release/result.json
+_dev/release/*.log
