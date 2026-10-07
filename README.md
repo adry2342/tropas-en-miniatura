@@ -4,6 +4,10 @@
 
 ![Centro de mando](docs/img/centro_mando.png)
 
+## ⬇️ Descargar
+
+Última versión: **[v0.7.2 (alpha)](https://github.com/adry2342/tropas-en-miniatura/releases/latest)** — Windows (.exe), Android (.apk), Linux y proyecto de Godot (.zip). Novedades en el [CHANGELOG](CHANGELOG.md).
+
 > Proyecto en desarrollo activo. Interfaz y textos en español. Pensado para PC; el Centro de mando ya está preparado también para móvil en horizontal.
 
 ---
