@@ -9,6 +9,5 @@ display_name = "Último en pie"
 description = "+40 % de daño si es la última tropa viva de su equipo."
 emoji = "🗿"
 rarity = 2
-specialty_id = ""
 effect_id = "ultimo_en_pie"
 params = {"damage_pct": 0.4}

@@ -78,6 +78,39 @@ static func label(text: String, size: int = 14, color: Color = TEXT) -> Label:
 	return l
 
 
+## Icono (textura) de tamaño fijo, centrado y sin recibir ratón.
+static func icon_rect(tex: Texture2D, px: float) -> TextureRect:
+	var r := TextureRect.new()
+	r.texture = tex
+	r.custom_minimum_size = Vector2(px, px)
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return r
+
+
+## Fila "icono + texto" (para el nombre de un arma). La etiqueta queda en meta "label".
+static func icon_label(tex: Texture2D, text: String, size: int = 14, color: Color = TEXT, center: bool = false) -> HBoxContainer:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 4)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if center:
+		h.alignment = BoxContainer.ALIGNMENT_CENTER
+	if tex:
+		h.add_child(icon_rect(tex, size * 1.7))
+	var l := label(text, size, color)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	h.add_child(l)
+	h.set_meta("label", l)
+	return h
+
+
+## Pone el icono del arma en un botón (el texto ya no lleva emoji).
+static func set_weapon_icon(b: Button, w: WeaponData, px: int = 22) -> void:
+	b.icon = w.get_icon() if w else null
+	b.add_theme_constant_override("icon_max_width", px)
+
+
 static func wrap_label(text: String, size: int = 13, color: Color = MUTED, min_w: float = 0.0) -> Label:
 	var l := label(text, size, color)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -164,7 +197,8 @@ static func stat_tile(title: String, value: String, color: Color, value_size: in
 
 ## Ficha de recluta (tienda y selección inicial). El VBox interior queda en meta "box"
 ## para que quien la usa añada su botón.
-static func make_recruit_card(card: TroopCard, width: float = 230.0) -> PanelContainer:
+## show_weapon_stats = false → solo el nombre del arma (sin impacto/cadencia/alcance/precisión).
+static func make_recruit_card(card: TroopCard, width: float = 230.0, show_weapon_stats: bool = true) -> PanelContainer:
 	var s := TroopStats.compute(card)
 	var w: WeaponData = s.weapon
 	var root := panel(PANEL, BORDER, 10, 2, 12)
@@ -183,9 +217,9 @@ static func make_recruit_card(card: TroopCard, width: float = 230.0) -> PanelCon
 	icon.texture = troop_texture(card)
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	portrait.add_child(icon)
-	var badge := label(emo(w.emoji), 26)
-	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	badge.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	var badge := icon_rect(w.get_icon(), 40)
+	badge.size_flags_horizontal = Control.SIZE_SHRINK_END
+	badge.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	portrait.add_child(badge)
 
 	var name_l := label(card.unit_name, 20, TEXT)
@@ -211,12 +245,16 @@ static func make_recruit_card(card: TroopCard, width: float = 230.0) -> PanelCon
 	var wv := VBoxContainer.new()
 	wv.add_theme_constant_override("separation", 1)
 	wbox.add_child(wv)
-	var wn := label("%s %s" % [emo(w.emoji), w.display_name], 14, rarity_color(w.rarity))
+	var wn := icon_label(w.get_icon(), w.display_name, 14, rarity_color(w.rarity))
 	wv.add_child(wn)
-	var golpe := "%d" % roundi(s.hit_damage) if s.pellets <= 1 else "%d×%d" % [s.pellets, roundi(s.hit_damage)]
-	wv.add_child(label("Impacto %s · %.1f disp/s" % [golpe, s.fire_rate], 11, MUTED))
-	wv.add_child(label("Alcance %d · Precisión %s" % [roundi(s.attack_range), pct(s.accuracy)], 11, MUTED))
-	box.add_child(recruit_extras_box(card))
+	if show_weapon_stats:
+		var golpe := "%d" % roundi(s.hit_damage) if s.pellets <= 1 else "%d×%d" % [s.pellets, roundi(s.hit_damage)]
+		wv.add_child(label("Impacto %s · %.1f disp/s" % [golpe, s.fire_rate], 11, MUTED))
+		wv.add_child(label("Alcance %d · Precisión %s" % [roundi(s.attack_range), pct(s.accuracy)], 11, MUTED))
+	else:
+		wv.add_child(label(w.get_family_name(), 11, MUTED))
+	if show_weapon_stats or not card.items.is_empty() or card.specialty:
+		box.add_child(recruit_extras_box(card))
 	return root
 
 

@@ -48,6 +48,7 @@ var _count_label: Label
 var _chapter_label: Label
 var _title_label: Label
 var _detail_icon: Label
+var _detail_tex: TextureRect
 var _detail_name: Label
 var _detail_meta: Label
 var _detail_desc: Label
@@ -363,6 +364,8 @@ func _build_right() -> void:
 	_detail_icon = _lbl("", "regular", 48, INK, true)
 	_detail_icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_icon_frame.add_child(_detail_icon)
+	_detail_tex = UiKit.icon_rect(null, 80)
+	_icon_frame.add_child(_detail_tex)
 	_detail_name = _lbl("", "title_bold", 24, INK, true)
 	_detail_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(_detail_name)
@@ -423,6 +426,12 @@ func _make_tile(res: Resource) -> Button:
 	b.custom_minimum_size = Vector2(TILE, TILE)
 	b.focus_mode = Control.FOCUS_NONE
 	b.text = UiKit.emo(String(res.get("emoji"))) if open else "🔒"
+	if open and res is WeaponData:
+		b.text = ""
+		b.icon = res.get_icon()
+		b.expand_icon = true
+		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		b.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
 	b.add_theme_font_size_override("font_size", 27)
 	var col: Color = _ink_color(res) if open else Color("#8a7d66")
 	var bg: Color = PARCH.lerp(col, 0.14) if open else Color("#d6c7a4")
@@ -459,6 +468,7 @@ func _show_detail(res: Resource) -> void:
 	_detail_mods.text = ""
 	if res == null:
 		_detail_icon.text = ""
+		_detail_tex.texture = null
 		_detail_name.text = ""
 		_detail_meta.text = ""
 		_detail_desc.text = ""
@@ -466,6 +476,7 @@ func _show_detail(res: Resource) -> void:
 		return
 	if not is_unlocked(res):
 		_detail_icon.text = "🔒"
+		_detail_tex.texture = null
 		_detail_name.text = "???"
 		_detail_name.add_theme_color_override("font_color", INK_SOFT)
 		_detail_meta.text = "Especialidad bloqueada" if res is SpecialtyData else "Aún no descubierto"
@@ -475,7 +486,8 @@ func _show_detail(res: Resource) -> void:
 	var rarity: int = _rar(res)
 	var col := _ink_color(res)
 	_icon_frame.add_theme_stylebox_override("panel", _frame_style(col))
-	_detail_icon.text = UiKit.emo(String(res.get("emoji")))
+	_detail_icon.text = "" if res is WeaponData else UiKit.emo(String(res.get("emoji")))
+	_detail_tex.texture = res.get_icon() if res is WeaponData else null
 	_detail_name.text = String(res.display_name)
 	_detail_name.add_theme_color_override("font_color", col.darkened(0.15))
 	_detail_desc.text = String(res.description)
@@ -495,9 +507,6 @@ func _show_detail(res: Resource) -> void:
 	if res is SkillData:
 		var s := res as SkillData
 		meta += " · Habilidad pasiva (no ocupa hueco)"
-		if s.specialty_id != "":
-			var spd := GameContent.find_specialty(s.specialty_id)
-			meta += " · Solo %s" % (spd.display_name if spd else s.specialty_id)
 		if s.stackable:
 			meta += " · Acumulable"
 		mods = TroopStats.describe_modifiers(s.modifiers)

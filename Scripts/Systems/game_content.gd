@@ -11,25 +11,21 @@ const _WEAPONS := [
 	preload("res://Resources/Weapons/cuchillo.tres"),
 	preload("res://Resources/Weapons/rifle_francotirador.tres"),
 	preload("res://Resources/Weapons/ametralladora.tres"),
-	preload("res://Resources/Weapons/lanzallamas.tres"),
 	preload("res://Resources/Weapons/bazuca.tres"),
 ]
 
 ## v6: Soldado, Doctor (id "medico"), Radioperador (id "comunicaciones"), Mecánico, Infiltrado,
-## Francotirador y Saboteador. Mecánico, Infiltrado y Saboteador aún no tienen mecánica.
-## Retiradas (sus .tres siguen en disco sin uso): Zapador (granadero.tres) y Municionero (municionero.tres).
+## Vigía y Saboteador. Mecánico, Infiltrado y Saboteador aún no tienen mecánica.
 const _SPECIALTIES := [
 	preload("res://Resources/Specialties/soldado.tres"),
 	preload("res://Resources/Specialties/medico.tres"),
 	preload("res://Resources/Specialties/comunicaciones.tres"),
 	preload("res://Resources/Specialties/mecanico.tres"),
 	preload("res://Resources/Specialties/infiltrado.tres"),
-	preload("res://Resources/Specialties/francotirador.tres"),
+	preload("res://Resources/Specialties/vigia.tres"),
 	preload("res://Resources/Specialties/saboteador.tres"),
 ]
 
-## Especialidades retiradas → la que la sustituye (perfiles guardados con veteranos antiguos).
-const LEGACY_SPECIALTY := {"granadero": "saboteador", "municionero": "mecanico"}
 
 const _SKILLS := [
 	preload("res://Resources/Skills/piel_dura.tres"),
@@ -104,7 +100,7 @@ static func find_weapon(id: String) -> WeaponData:
 
 
 static func find_specialty(id: String) -> SpecialtyData:
-	return _find(_SPECIALTIES, LEGACY_SPECIALTY.get(id, id)) as SpecialtyData
+	return _find(_SPECIALTIES, id) as SpecialtyData
 
 
 static func find_skill(id: String) -> SkillData:

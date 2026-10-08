@@ -66,9 +66,13 @@ static func recruit_weapon_options() -> Array[WeaponData]:
 ## (Economy.recruit_price) sube según el arma y el objeto, con descuento respecto a comprarlo aparte.
 ## allow_specialty: solo los reclutas de la Intendencia pueden venir ya especializados
 ## (Economy.RECRUIT_SPECIALTY_CHANCE). El primer recluta gratis nunca.
-static func make_recruit(rng: RandomNumberGenerator = null, allow_specialty: bool = false) -> TroopCard:
+## starter = el primer recluta de la run: Vida siempre la misma (sin horquilla) y sin objeto.
+## Los que se compran luego en la Intendencia sí varían y pueden traer objeto (por eso cuestan más).
+static func make_recruit(rng: RandomNumberGenerator = null, allow_specialty: bool = false, starter: bool = false) -> TroopCard:
 	rng = _rng(rng)
 	var c := _base_card(rng)
+	if starter:
+		c.base_health = BASE_HEALTH
 	var commons: Array[WeaponData] = []
 	var rares: Array[WeaponData] = []
 	for w in recruit_weapon_options():
@@ -81,7 +85,7 @@ static func make_recruit(rng: RandomNumberGenerator = null, allow_specialty: boo
 		pool = recruit_weapons()
 	c.weapons.assign([pool[rng.randi_range(0, pool.size() - 1)]])
 	c.equipped_weapon = 0
-	if rng.randf() < Economy.RECRUIT_ITEM_CHANCE:
+	if not starter and rng.randf() < Economy.RECRUIT_ITEM_CHANCE:
 		var items: Array = []
 		var weights: Array = []
 		for it in GameContent.items():

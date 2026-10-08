@@ -64,7 +64,7 @@ const DEFAULT_TREES := {
 		{"name": "Mejora III", "description": PENDING_TEXT, "cost": 8, "modifiers": {}, "effects": {}},
 		{"name": "Mejora IV", "description": PENDING_TEXT, "cost": 12, "modifiers": {}, "effects": {}},
 	],
-	"francotirador": [
+	"vigia": [
 		{"name": "Mejora I", "description": PENDING_TEXT, "cost": 3, "modifiers": {}, "effects": {}},
 		{"name": "Mejora II", "description": PENDING_TEXT, "cost": 5, "modifiers": {}, "effects": {}},
 		{"name": "Mejora III", "description": PENDING_TEXT, "cost": 8, "modifiers": {}, "effects": {}},
@@ -153,7 +153,7 @@ const UNLOCKS := [
 	{"id": "soldado", "milestone": "", "text": "Disponible desde el principio"},
 	{"id": "medico", "milestone": "sector_1", "text": "Llega al 1.er Jefe de Sector (ronda 10)"},
 	{"id": "comunicaciones", "milestone": "sector_2", "text": "Llega al 2.º Jefe de Sector (ronda 20)"},
-	{"id": "francotirador", "milestone": "sector_3", "text": "Llega al 3.er Jefe de Sector (ronda 30)"},
+	{"id": "vigia", "milestone": "sector_3", "text": "Llega al 3.er Jefe de Sector (ronda 30)"},
 	{"id": "infiltrado", "milestone": "final_boss", "text": "Vence al Jefe Final"},
 	{"id": "mecanico", "milestone": "sector_4", "text": "Llega al 4.º Jefe de Sector (ronda 40)"},
 	{"id": "saboteador", "milestone": "infinite_mode", "text": "Completa el Modo Infinito"},

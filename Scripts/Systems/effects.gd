@@ -4,12 +4,14 @@ extends RefCounted
 ## Cada tropa crea su propio Effects al empezar el combate; troop.gd llama a los ganchos.
 ##   on_fight_start · on_process(delta) · on_before_shot · on_hit · on_damaged · on_ally_died · on_kill
 ## v4 — mecánicas de especialidad (con sinergias entre ellas):
-##   supresion (Soldado) · tirador_elite + paciencia (Francotirador) · primeros_auxilios + estabilizar (Médico)
+##   supresion (Soldado) · tirador_elite + guardia (Vigía) · primeros_auxilios + estabilizar (Médico)
 ##   radio (Radioperador: marcar y artillería)
 ## v6: Municionero y Zapador retirados; su código (reparto_municion, minas, carga_hueca) queda sin uso
 ##   por si se reaprovecha (p. ej. para el Saboteador). Mecánico, Infiltrado y Saboteador: sin mecánica aún.
 
-const GRENADE_RANGE := 260.0      # alcance máximo del lanzamiento de la granada (objeto)
+## Granada (objeto): solo se lanza a media distancia tirando a cerca. Más cerca o más lejos, no.
+const GRENADE_MIN_RANGE := 70.0
+const GRENADE_MAX_RANGE := 210.0
 const GRENADE_FIRST_DELAY := 0.5  # la primera granada sale a la mitad del cooldown
 const OFFICER_TICK := 0.25
 const MINE_SCRIPT := preload("res://Scripts/Battle/mine.gd")
@@ -28,6 +30,12 @@ var marks_done: int = 0
 var mines_placed: int = 0
 var suppressions: int = 0
 var grenades_thrown: int = 0
+# Vigía (En guardia)
+var in_guard: bool = false
+var reaction_pending: bool = false
+var reactions: int = 0
+var _react_cd: float = 0.0
+var _seen: Dictionary = {}   # enemigos que ya entraron en su alcance (instance_id → true)
 var heal_done: float = 0.0        # total curado por esta tropa (a sí misma o a aliados)
 var _timers: Dictionary = {}
 var _regen_shown: float = 0.0
@@ -161,6 +169,8 @@ func on_process(delta: float) -> void:
 			for a in _allies(false):
 				if a.global_position.distance_to(troop.global_position) <= rr:
 					a.add_buff("municion", "reload_pct", p("reparto_municion", "reload_pct", -0.3), OFFICER_TICK * 2.0)
+	if has("guardia"):
+		_tick_guard(delta)
 	if has("radio"):
 		_timers["radio_mark"] += delta
 		if _timers["radio_mark"] >= p("radio", "mark_interval", 4.0):
@@ -172,15 +182,56 @@ func on_process(delta: float) -> void:
 				artillery_done = true
 
 
+## true mientras el Vigía está En guardia (quieto el tiempo suficiente).
+func is_in_guard() -> bool:
+	return in_guard
+
+
+## Vigía · En guardia: quieto still_time → más alcance y precisión; cada enemigo que ENTRA en su
+## alcance estando en guardia recibe un disparo de reacción inmediato (uno por enemigo y combate).
+func _tick_guard(delta: float) -> void:
+	var g: bool = troop.still_time >= p("guardia", "still_time", 1.2)
+	if g != in_guard:
+		in_guard = g
+		if g:
+			troop.show_text("🔭 En guardia", Color(0.6, 0.8, 1.0), 11, 8.0)
+		troop.queue_redraw()
+	if g:
+		troop.add_buff("guardia", "range_pct", p("guardia", "range_pct", 0.15), 0.3)
+	_react_cd -= delta
+	var r: float = troop.get_attack_range()
+	for e in troop.get_tree().get_nodes_in_group("troops"):
+		if not is_instance_valid(e) or e.is_dead or not ("team" in e) or e.team == troop.team:
+			continue
+		var id: int = e.get_instance_id()
+		if _seen.has(id) or troop.global_position.distance_to(e.global_position) > r:
+			continue
+		_seen[id] = true
+		if g and _react_cd <= 0.0 and troop.reaction_shot(e):
+			_react_cd = p("guardia", "reaction_cd", 0.8)
+			reactions += 1
+
+
 ## Bonos para el disparo que va a salir: {accuracy, crit_chance, damage_pct}.
 func on_before_shot() -> Dictionary:
 	var b := {"accuracy": 0.0, "crit_chance": 0.0, "damage_pct": 0.0}
+	if has("guardia") and in_guard:
+		b.accuracy += p("guardia", "accuracy", 0.1)
+	if reaction_pending:
+		reaction_pending = false
+		b.crit_chance += p("guardia", "reaction_crit", 0.3)
+		b.damage_pct += p("guardia", "reaction_damage", 0.25)
 	if has("paciencia") and troop.still_time >= p("paciencia", "still_time", 1.0):
 		b.accuracy += p("paciencia", "accuracy", 0.15)
 		b.crit_chance += p("paciencia", "crit_chance", 0.10)
 	if has("ultimo_en_pie") and _allies(false).is_empty():
 		b.damage_pct += p("ultimo_en_pie", "damage_pct", 0.4)
-	# Sinergia: el Tirador de élite remata a quien está suprimido (Soldado) o marcado (Radioperador)
+	# Coordenadas precisas (cualquiera): más daño contra blancos marcados
+	if has("coordenadas"):
+		var tm = troop.target
+		if tm != null and is_instance_valid(tm) and tm.marked_left > 0.0:
+			b.damage_pct += p("coordenadas", "vs_marked", 0.2)
+	# Sinergia: el Vigía remata a quien está suprimido (Soldado) o marcado (Radioperador)
 	if has("tirador_elite"):
 		var t = troop.target
 		if t != null and is_instance_valid(t) and (t.suppressed_left > 0.0 or t.marked_left > 0.0):
@@ -189,6 +240,10 @@ func on_before_shot() -> Dictionary:
 
 
 func on_hit(victim: Node, info: Dictionary) -> void:
+	# Enlace táctico (cualquiera): sus impactos marcan al blanco un momento (+daño recibido de todos)
+	if has("enlace") and is_instance_valid(victim) and not victim.is_dead and not info.get("friendly_fire", false):
+		victim.marked_left = maxf(victim.marked_left, p("enlace", "hit_mark", 2.0))
+		victim.marked_bonus = maxf(victim.marked_bonus, p("enlace", "mark_bonus", 0.1))
 	# Soldado: fuego de supresión — el blanco pierde precisión y velocidad un momento
 	if has("supresion") and is_instance_valid(victim) and not victim.is_dead and not info.get("friendly_fire", false):
 		var was: bool = victim.suppressed_left > 0.0
@@ -255,18 +310,34 @@ func _self_regen(delta: float) -> void:
 		_regen_shown = 0.0
 
 
-## Lanza la granada al objetivo actual si está a tiro. Devuelve true si la lanzó.
+## Lanza la granada si hay un enemigo a media distancia (GRENADE_MIN..MAX_RANGE): primero su
+## objetivo, si no el enemigo más cercano dentro de esa franja. Devuelve true si la lanzó.
 func _throw_grenade() -> bool:
-	var tgt = troop.target
-	if tgt == null or not is_instance_valid(tgt) or tgt.is_dead:
+	if troop.is_throwing():
 		return false
-	var reach := maxf(GRENADE_RANGE, float(troop.stats.get("attack_range", 0.0)))
-	if troop.global_position.distance_to(tgt.global_position) > reach:
+	var tgt = troop.target
+	if not _grenade_ok(tgt):
+		tgt = null
+		var best := INF
+		for e in troop.get_tree().get_nodes_in_group("troops"):
+			if _grenade_ok(e):
+				var d: float = troop.global_position.distance_to(e.global_position)
+				if d < best:
+					best = d
+					tgt = e
+	if tgt == null:
 		return false
 	var dmg: float = p("granada", "damage", 30.0) * float(troop.stats.get("damage_mult", 1.0))
 	troop.throw_grenade(tgt, dmg, p("granada", "radius", 70.0))
 	grenades_thrown += 1
 	return true
+
+
+func _grenade_ok(t) -> bool:
+	if t == null or not is_instance_valid(t) or t.is_dead or not ("team" in t) or t.team == troop.team:
+		return false
+	var d: float = troop.global_position.distance_to(t.global_position)
+	return d >= GRENADE_MIN_RANGE and d <= GRENADE_MAX_RANGE
 
 
 # ---------------------------------------------------------------- v4: especialidades

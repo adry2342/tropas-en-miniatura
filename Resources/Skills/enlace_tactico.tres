@@ -6,9 +6,8 @@
 script = ExtResource("1_script")
 id = "enlace_tactico"
 display_name = "Enlace táctico"
-description = "Las marcas del radio duran 2 s más y dan +10 % de daño extra."
+description = "Sus impactos marcan al blanco 2 s: recibe +10 % de daño de todos. Con Radioperador, sus marcas duran 2 s más y pegan +10 % más."
 emoji = "📻"
 rarity = 0
-specialty_id = "comunicaciones"
 effect_id = "enlace"
-params = {"mark_duration": 2.0, "mark_bonus": 0.1}
+params = {"hit_mark": 2.0, "mark_duration": 2.0, "mark_bonus": 0.1}

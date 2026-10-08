@@ -9,5 +9,4 @@ display_name = "Cargador ampliado"
 description = "+40 % de cargador."
 emoji = "📦"
 rarity = 0
-specialty_id = "soldado"
 modifiers = {"magazine_pct": 0.4}

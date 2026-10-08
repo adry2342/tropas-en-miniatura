@@ -3,7 +3,7 @@ extends Resource
 ## Arma: define cómo dispara una tropa. La tropa solo aporta Vida y Daño (multiplicador).
 
 enum Family { PISTOLA, AUTOMATICA, ESCOPETA, PRECISION, PESADA, EXPLOSIVO, CUERPO_A_CUERPO }
-enum Projectile { BALA, GRANADA, COHETE, LLAMA, NINGUNO } # NINGUNO = cuerpo a cuerpo (impacto instantáneo)
+enum Projectile { BALA, GRANADA, COHETE, NINGUNO } # NINGUNO = cuerpo a cuerpo (impacto instantáneo)
 
 const FAMILY_NAMES := ["Pistola", "Automática", "Escopeta", "Precisión", "Pesada", "Explosivo", "Cuerpo a cuerpo"]
 
@@ -37,6 +37,19 @@ const FAMILY_NAMES := ["Pistola", "Automática", "Escopeta", "Precisión", "Pesa
 @export var min_range: float = 0.0        # por debajo de esto no dispara (bazuca: se haría daño)
 @export var fire_on_move: bool = false    # puede disparar mientras avanza (con penalización de precisión)
 @export var move_speed_mult: float = 1.0  # peso del arma: cuchillo ligero, pesadas lentas
+## Escopeta: cada perdigón EXTRA que acierta al mismo blanco en el mismo disparo suma este % al daño
+## de todos (1 perdigón = daño normal; 5 = ×(1 + 4·bonus)). Así de cerca destroza y de lejos rasca.
+@export var pellet_stack_bonus: float = 0.0
+
+
+## Icono del arma (dibujo del mismo estilo que el arma que llevan las tropas).
+func get_icon() -> Texture2D:
+	if icon:
+		return icon
+	var p := "res://Assets/Weapons/icons/%s.png" % id
+	if id != "" and ResourceLoader.exists(p):
+		icon = load(p)
+	return icon
 
 
 func get_family_name() -> String:

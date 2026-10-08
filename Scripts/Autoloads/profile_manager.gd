@@ -335,7 +335,7 @@ func progress_to_dict() -> Dictionary:
 
 
 ## Lee medallas y rangos de un diccionario del archivo. Claves ausentes (perfil v1) → 0.
-## Ids antiguos se traducen (GameContent.LEGACY_SPECIALTY); ids desconocidos se ignoran.
+## Ids desconocidos se ignoran.
 func apply_progress_dict(data: Dictionary) -> void:
 	medals = maxi(0, int(data.get("medals", 0)))
 	specialty_ranks.clear()

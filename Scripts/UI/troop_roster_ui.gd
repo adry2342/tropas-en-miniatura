@@ -200,7 +200,7 @@ func _make_troop_card(c: TroopCard, texture: Texture2D, deployed: bool) -> Butto
 	var w: WeaponData = c.get_weapon() if c else null
 	if c:
 		btn.tooltip_text = "%s · Nv. %d\n%s\nObjetos %d/%d · Habilidades %d" % [c.get_title(), c.level,
-				("%s %s" % [UiKit.emo(w.emoji), w.display_name]) if w else "Sin arma", c.items.size(), TroopCard.MAX_ITEM_SLOTS, c.skills.size()]
+				w.display_name if w else "Sin arma", c.items.size(), TroopCard.MAX_ITEM_SLOTS, c.skills.size()]
 
 	var vbox := VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -225,11 +225,14 @@ func _make_troop_card(c: TroopCard, texture: Texture2D, deployed: bool) -> Butto
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	icon.texture = texture if texture else UiKit.troop_texture(c)
 	top.add_child(icon)
-	var we := _small_label(UiKit.emo(w.emoji) if w else "✊", 18, Color.WHITE)
-	we.clip_text = false
-	we.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
-	we.custom_minimum_size = Vector2(26, 0)
-	top.add_child(we)
+	if w:
+		top.add_child(UiKit.icon_rect(w.get_icon(), 28))
+	else:
+		var we := _small_label("✊", 18, Color.WHITE)
+		we.clip_text = false
+		we.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+		we.custom_minimum_size = Vector2(26, 0)
+		top.add_child(we)
 
 	vbox.add_child(_small_label(c.unit_name if c else "Tropa", 12, Color.WHITE))
 	vbox.add_child(_small_label(c.get_specialty_name() if c else "Recluta", 10, UiKit.specialty_color(c)))
@@ -320,6 +323,11 @@ func _create_drag_preview(res: Resource) -> void:
 		drag_preview_node.modulate.a = 0.6
 		drag_preview_node.set_physics_process(false)
 		drag_preview_node.global_position = drag_preview_node.get_global_mouse_position()
+	elif res is WeaponData:
+		var row := UiKit.icon_label(res.get_icon(), res.display_name, 16, Color(1.0, 0.85, 0.2))
+		add_child(row)
+		drag_preview_node = row
+		row.global_position = row.get_global_mouse_position()
 	else:
 		var label := Label.new()
 		label.text = "%s %s" % [UiKit.emo(String(res.get("emoji"))) if res.get("emoji") else "🎁", res.display_name]

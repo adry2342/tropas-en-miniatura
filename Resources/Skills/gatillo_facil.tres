@@ -9,5 +9,4 @@ display_name = "Gatillo fácil"
 description = "+15 % de cadencia, −5 % de precisión."
 emoji = "⚡"
 rarity = 0
-specialty_id = ""
 modifiers = {"fire_rate_pct": 0.15, "accuracy": -0.05}

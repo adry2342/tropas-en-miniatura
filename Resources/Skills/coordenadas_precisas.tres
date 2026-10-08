@@ -6,9 +6,8 @@
 script = ExtResource("1_script")
 id = "coordenadas_precisas"
 display_name = "Coordenadas precisas"
-description = "La artillería del radioperador dispara 2 proyectiles más y hace +30 % de daño."
+description = "+20 % de daño contra enemigos marcados. Con Radioperador, su artillería dispara 2 proyectiles más y hace +30 % de daño."
 emoji = "🗺️"
 rarity = 1
-specialty_id = "comunicaciones"
 effect_id = "coordenadas"
-params = {"extra_shells": 2, "damage_pct": 0.3}
+params = {"vs_marked": 0.2, "extra_shells": 2, "damage_pct": 0.3}

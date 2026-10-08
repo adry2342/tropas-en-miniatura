@@ -50,8 +50,6 @@ static func weighted_index(weights: Array, rng: RandomNumberGenerator) -> int:
 
 
 static func _skill_ok(card: TroopCard, s: SkillData) -> bool:
-	if s.specialty_id != "" and (card.specialty == null or card.specialty.id != s.specialty_id):
-		return false
 	if card.has_skill(s.id) and not s.stackable:
 		return false
 	for req in s.requires:

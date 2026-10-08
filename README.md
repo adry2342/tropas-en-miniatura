@@ -6,7 +6,7 @@
 
 ## ⬇️ Descargar
 
-Última versión: **[v0.7.3 (alpha)](https://github.com/adry2342/tropas-en-miniatura/releases/latest)** — Windows (.exe), Android (.apk), Linux y proyecto de Godot (.zip). Novedades en el [CHANGELOG](CHANGELOG.md).
+Última versión: **[v0.7.4 (alpha)](https://github.com/adry2342/tropas-en-miniatura/releases/latest)** — Windows (.exe), Android (.apk), Linux y proyecto de Godot (.zip). Novedades en el [CHANGELOG](CHANGELOG.md).
 
 > Proyecto en desarrollo activo. Interfaz y textos en español. Pensado para PC; el Centro de mando ya está preparado también para móvil en horizontal.
 
@@ -30,19 +30,19 @@
 ## Cómo se juega
 
 1. **Menú principal** → *Jugar* te lleva al **Centro de mando**.
-2. En la **Mesa táctica** empiezas una operación (run). Eliges tu primer recluta entre 3.
+2. En la **Mesa táctica** empiezas una operación (run). Eliges tu primer recluta entre 3 (todos con la misma vida y sin objeto).
 3. Cada ronda tiene dos fases:
    - **Planificación**: arrastras tus tropas a tu zona del tablero (5×5), compras en la **Intendencia** (reclutas, objetos y armas con 💰 monedas) y subes de nivel a tus soldados con ⭐ Puntos de Mando.
    - **Combate**: las tropas luchan solas. Cada arma tiene su alcance, precisión y distancia de combate preferida.
 4. Las rondas son **infinitas**: cada 10 rondas hay un **Jefe de Sector**, y a partir de la ronda 11 una ruleta puede hacer aparecer al **Jefe Final** (+0,5 % por ronda). Vencerlo gana la partida.
-5. Cada jefe que derrotas te da **🏅 Medallas de mando** para mejorar tus especialidades, y si vences al Jefe Final puedes **criogenizar a uno de tus soldados** como veterano.
+5. Cada jefe que derrotas te da **🏅 Medallas de mando** para mejorar tus especialidades, y si vences al Jefe Final puedes **criogenizar a uno de tus soldados** como veterano y ponerle nombre.
 
 ## Características
 
-- **Tropas únicas**: cada recluta tiene nombre, vida y daño propios (±10 %), un arma y, a veces, un objeto o una especialidad.
-- **Combate táctico automático**: IA por carriles, separación entre compañeros, distancia de combate según el arma, precisión que cae con la distancia, disparo en marcha solo con armas ligeras, explosiones con caída de daño, fuego amigo con balas desviadas y críticos/impactos letales.
-- **9 armas**: cuchillo, pistola, escopeta, subfusil, fusil de asalto, ametralladora, rifle de francotirador, lanzallamas y bazuca. Se mejoran con ⭐.
-- **Objetos** (3 huecos por tropa: munición, armadura, utilidad) y **habilidades pasivas** que se eligen al subir de nivel.
+- **Tropas únicas y animadas**: cada recluta tiene nombre, vida y daño propios (±10 %), un arma y, a veces, un objeto o una especialidad. Andan, disparan, recargan (quietos), cambian de arma, lanzan granadas y caen al morir; el jefe tiene animaciones propias.
+- **Combate táctico automático**: IA por carriles, separación entre compañeros, distancia de combate según el arma, precisión que cae con la distancia, disparo en marcha solo con armas ligeras, explosiones con caída de daño, fuego amigo con balas desviadas, críticos/impactos letales y varias armas por tropa (cambia a la de reserva si se queda sin balas bajo fuego).
+- **8 armas** dibujadas en el estilo del juego: cuchillo, pistola, escopeta, subfusil, fusil de asalto, ametralladora, rifle de francotirador y bazuca. Se mejoran con ⭐. La escopeta pega más cuantos más perdigones acierten.
+- **Objetos** (3 huecos por tropa: munición, armadura, utilidad) y **habilidades pasivas** que se eligen al subir de nivel (cualquier tropa puede tener cualquier habilidad).
 - **Economía de run**: monedas por baja y por victoria con interés; Puntos de Mando por victoria; presupuesto de poder enemigo que crece cada ronda.
 - **Códice** con todas las habilidades, objetos, armas y especialidades.
 - **Centro de mando** en vista ¾ con objetos interactivos que brillan al pasar el ratón: mesa táctica, tubos criogénicos con tus veteranos, archivo (Códice), terminal de especialidades, hangar del Modo Infinito y radio (Configuración).
@@ -57,7 +57,7 @@ Las tropas eligen especialidad al llegar a **Nv. 5** (algunos reclutas de la Int
 | 🎖️ **Soldado** | Fuego de supresión: los impactos reducen la precisión y la velocidad del blanco | Desde el principio |
 | 🩺 **Doctor** | Cura al aliado más herido y salva una vez a quien iba a caer | Llegar al 1.er Jefe de Sector |
 | 📡 **Radioperador** | Revela el mapa de calor enemigo, marca objetivos y pide artillería | Llegar al 2.º Jefe de Sector |
-| 🎯 **Francotirador** | Apunta al enemigo más peligroso; crítico extra contra suprimidos o marcados | Llegar al 3.er Jefe de Sector |
+| 🔭 **Vigía** | Quieto entra *En guardia*: más alcance y disparo de reacción a todo enemigo que entra en su zona; apunta al más peligroso y critica más a suprimidos o marcados | Llegar al 3.er Jefe de Sector |
 | 🗡️ **Infiltrado** | Aparece tras las líneas enemigas *(mecánica en desarrollo)* | Vencer al Jefe Final |
 | 🔧 **Mecánico** | Especialista en vehículos *(en desarrollo)* | Llegar al 4.º Jefe de Sector |
 | 🧨 **Saboteador** | Sabotea vehículos, armas, trampas y minas enemigas *(en desarrollo)* | Completar el Modo Infinito |

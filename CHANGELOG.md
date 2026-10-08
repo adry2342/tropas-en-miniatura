@@ -2,6 +2,30 @@
 
 Todas las versiones notables de **Tropas en miniatura**. Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones con [SemVer](https://semver.org/lang/es/).
 
+## [0.7.4] - 2026-10-09
+
+### Añadido
+- **Tropas animadas**: el soldado está hecho por piezas (piernas, cuerpo y brazos que giran en el hombro). Anda, respira, dispara con retroceso y fogonazo (las balas salen de la boca del arma), recarga, cambia de arma guardando una y sacando otra, lanza granadas y cae al morir. El jefe tiene animaciones propias: paso pesado con polvo, retroceso fuerte y muerte en dos tiempos.
+- **Armas en la mano**: las de una mano (pistola, cuchillo, subfusil) con el brazo extendido; las largas (fusil, escopeta, francotirador, ametralladora, bazuca) a dos manos.
+- **Arte nuevo de las armas** en el estilo del personaje, con iconos nuevos en toda la interfaz (ficha, arsenal, tienda, subidas, Códice, Cuartel y fin de partida).
+- **Nombre del veterano**: al guardarlo en el Cuartel se escribe su nombre (teclado en PC, teclado del sistema en móvil).
+- **Vigía** (sustituye al Francotirador): quieto entra *En guardia* (+15 % de alcance y +10 % de precisión) y hace un disparo de reacción a todo enemigo que entra en su alcance. Sigue apuntando al más peligroso.
+- `_dev/GDD.md`: documento de diseño y estado del proyecto al día.
+
+### Cambiado
+- **Granada**: solo se lanza contra un enemigo a media distancia; mientras la lanza, la tropa guarda el arma y no dispara ni se mueve.
+- **Escopeta**: cada perdigón que acierta suma un 20 % de daño a los demás del mismo disparo (de cerca destroza, de lejos rasca).
+- **Recargar exige estar quieto.**
+- **Explosiones** nuevas: fogonazo, bola de fuego que se vuelve humo, onda redonda hasta el radio de daño, chispas y mancha de quemado.
+- Nombre y nivel encima de la barra de vida: siempre visibles en la planificación y al pasar el ratón en combate.
+- **Primer recluta**: siempre 100 de vida, sin objeto, y la ficha de elección solo muestra el arma.
+- **Habilidades libres**: cualquier tropa puede aprender cualquier habilidad. Cirujano, Enlace táctico y Coordenadas precisas tienen ahora efecto para todos.
+
+### Eliminado
+- **Lanzallamas**.
+- Especialidades retiradas (Zapador, Municionero) con sus habilidades, la habilidad Comando y recursos antiguos sin uso.
+- Las partidas guardadas con Francotirador o lanzallamas ya no los cargan.
+
 ## [0.7.3] - 2026-10-08
 
 ### Añadido

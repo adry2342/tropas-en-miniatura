@@ -9,6 +9,5 @@ display_name = "Venganza"
 description = "+30 % de cadencia durante 4 s cuando cae un aliado."
 emoji = "😡"
 rarity = 1
-specialty_id = ""
 effect_id = "venganza"
 params = {"fire_rate_pct": 0.3, "duration": 4.0}

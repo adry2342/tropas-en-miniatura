@@ -9,6 +9,5 @@ display_name = "Oficial"
 description = "Aura: +15 % de cadencia a los aliados a 180 px o menos."
 emoji = "🎖️"
 rarity = 2
-specialty_id = "soldado"
 effect_id = "oficial"
 params = {"radius": 180.0, "fire_rate_pct": 0.15}

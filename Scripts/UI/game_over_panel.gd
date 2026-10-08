@@ -26,6 +26,11 @@ var _replace_row: HBoxContainer
 var _confirm_button: Button
 var _skip_button: Button
 var _vault_info: Label
+# --- Nombre del veterano (se escribe al guardarlo; en móvil sale el teclado del sistema) ---
+const NAME_MAX_LEN := 16
+var _name_layer: Control
+var _name_edit: LineEdit
+var _name_ok: Button
 
 # --- Medallas de mando (meta-progresión) ---
 ## Medallas concedidas por esta run (se calculan y dan una sola vez en setup()).
@@ -212,7 +217,7 @@ func _build_vault_picker() -> void:
 	_confirm_button.custom_minimum_size = Vector2(280, 42)
 	_confirm_button.add_theme_font_size_override("font_size", 16)
 	UiKit.style_button(_confirm_button, Color(0.3, 0.22, 0.08), UiKit.GOLD, Color(1.0, 0.92, 0.6), 8)
-	_confirm_button.pressed.connect(confirm_store)
+	_confirm_button.pressed.connect(request_store)
 	actions.add_child(_confirm_button)
 	_skip_button = Button.new()
 	_skip_button.name = "SkipStoreButton"
@@ -239,7 +244,7 @@ func _small_card_button(card: TroopCard, action: String) -> Button:
 	b.toggle_mode = true
 	b.focus_mode = Control.FOCUS_NONE
 	var s := TroopStats.compute(card)
-	b.tooltip_text = "%s · Nv. %d\n%s %s · %d habilidades\n%s" % [card.get_title(), card.level, UiKit.emo(s.weapon.emoji), s.weapon.display_name, card.skills.size(), action]
+	b.tooltip_text = "%s · Nv. %d\n%s · %d habilidades\n%s" % [card.get_title(), card.level, s.weapon.display_name, card.skills.size(), action]
 	var v := VBoxContainer.new()
 	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	v.offset_left = 6
@@ -258,7 +263,11 @@ func _small_card_button(card: TroopCard, action: String) -> Button:
 	v.add_child(icon)
 	for ln in [[card.unit_name, 15, UiKit.TEXT],
 			["%s · Nv. %d" % [UiKit.specialty_text(card), card.level], 11, UiKit.specialty_color(card)],
-			["%s ❤ %s  💥 %s" % [UiKit.emo(s.weapon.emoji), UiKit.health_text(s), UiKit.damage_text(s)], 11, UiKit.MUTED]]:
+			["❤ %s  💥 %s" % [UiKit.health_text(s), UiKit.damage_text(s)], 11, UiKit.MUTED, s.weapon.get_icon()]]:
+		if ln.size() > 3:
+			var row := UiKit.icon_label(ln[3], ln[0], ln[1], ln[2], true)
+			v.add_child(row)
+			continue
 		var l := UiKit.label(ln[0], ln[1], ln[2])
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l.clip_text = true
@@ -290,8 +299,120 @@ func select_replace(i: int) -> void:
 	_refresh_picker()
 
 
-## Guarda la tropa elegida en el Cuartel. Devuelve true si se guardó.
-func confirm_store() -> bool:
+## Botón "Guardar": antes de guardarlo pide el nombre del veterano.
+func request_store() -> void:
+	var pm := _pm()
+	if vault_decided or pm == null or selected_index < 0:
+		return
+	if pm.is_vault_full() and replace_index < 0:
+		return
+	_open_name_dialog(candidates[selected_index].unit_name)
+
+
+func is_name_dialog_open() -> bool:
+	return _name_layer != null and _name_layer.visible
+
+
+func _build_name_dialog() -> void:
+	_name_layer = Control.new()
+	_name_layer.name = "NameDialog"
+	_name_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_name_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	$Control.add_child(_name_layer)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.6)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_name_layer.add_child(dim)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_name_layer.add_child(center)
+	var pc := UiKit.panel(UiKit.PANEL, UiKit.GOLD, 12, 2, 18)
+	center.add_child(pc)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 10)
+	pc.add_child(v)
+	var t := UiKit.label("🏛  ¿Cómo se llamará este veterano?", 20, UiKit.GOLD)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(t)
+	var hint := UiKit.label("Así aparecerá en su tubo criogénico. Máximo %d letras." % NAME_MAX_LEN, 13, UiKit.MUTED)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(hint)
+	_name_edit = LineEdit.new()
+	_name_edit.name = "NameEdit"
+	_name_edit.max_length = NAME_MAX_LEN
+	_name_edit.placeholder_text = "Nombre del soldado"
+	_name_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_name_edit.custom_minimum_size = Vector2(360, 48)
+	_name_edit.add_theme_font_size_override("font_size", 22)
+	_name_edit.virtual_keyboard_enabled = true   # móvil: abre el teclado del sistema
+	_name_edit.virtual_keyboard_type = LineEdit.KEYBOARD_TYPE_DEFAULT
+	_name_edit.select_all_on_focus = true
+	_name_edit.text_changed.connect(func(_t): _validate_name())
+	_name_edit.text_submitted.connect(func(_t): _accept_name())
+	v.add_child(_name_edit)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 12)
+	v.add_child(row)
+	var cancel := Button.new()
+	cancel.text = "Cancelar"
+	cancel.custom_minimum_size = Vector2(150, 42)
+	UiKit.style_button(cancel, UiKit.PANEL_2, UiKit.BORDER, UiKit.MUTED, 8)
+	cancel.pressed.connect(_close_name_dialog)
+	row.add_child(cancel)
+	_name_ok = Button.new()
+	_name_ok.name = "NameOkButton"
+	_name_ok.text = "🏛  Guardar"
+	_name_ok.custom_minimum_size = Vector2(190, 42)
+	_name_ok.add_theme_font_size_override("font_size", 16)
+	UiKit.style_button(_name_ok, Color(0.3, 0.22, 0.08), UiKit.GOLD, Color(1.0, 0.92, 0.6), 8)
+	_name_ok.pressed.connect(_accept_name)
+	row.add_child(_name_ok)
+
+
+func _open_name_dialog(current: String) -> void:
+	if _name_layer == null:
+		_build_name_dialog()
+	_name_edit.text = current
+	_validate_name()
+	_name_layer.visible = true
+	_name_edit.grab_focus()
+	_name_edit.select_all()
+	if _name_edit.has_method("edit"):
+		_name_edit.call("edit") # muestra el teclado virtual en móvil
+
+
+func _close_name_dialog() -> void:
+	if _name_layer:
+		_name_layer.visible = false
+		_name_edit.release_focus()
+
+
+func _clean_name(t: String) -> String:
+	return t.strip_edges().substr(0, NAME_MAX_LEN)
+
+
+func _validate_name() -> void:
+	if _name_ok:
+		_name_ok.disabled = _clean_name(_name_edit.text) == ""
+
+
+func _accept_name() -> void:
+	var n := _clean_name(_name_edit.text)
+	if n == "":
+		return
+	_close_name_dialog()
+	confirm_store(n)
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if is_name_dialog_open() and event.is_action_pressed("ui_cancel"):
+		_close_name_dialog()
+		get_viewport().set_input_as_handled()
+
+
+## Guarda la tropa elegida en el Cuartel (con el nombre escrito, si se da). Devuelve true si se guardó.
+func confirm_store(new_name: String = "") -> bool:
 	var pm := _pm()
 	if vault_decided or pm == null or selected_index < 0:
 		return false
@@ -299,6 +420,8 @@ func confirm_store() -> bool:
 	if full and replace_index < 0:
 		return false
 	var card := candidates[selected_index]
+	if _clean_name(new_name) != "":
+		card.unit_name = _clean_name(new_name)
 	if not pm.store_troop(card, replace_index if full else -1):
 		return false
 	stored_card = card

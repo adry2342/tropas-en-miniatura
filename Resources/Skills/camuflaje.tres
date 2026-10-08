@@ -9,6 +9,5 @@ display_name = "Camuflaje"
 description = "Los enemigos no le apuntan durante los 3 primeros segundos."
 emoji = "🌿"
 rarity = 1
-specialty_id = ""
 effect_id = "camuflaje"
 params = {"duration": 3.0}

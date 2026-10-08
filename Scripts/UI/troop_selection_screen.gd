@@ -36,7 +36,7 @@ func _build_ui() -> void:
 	var title := UiKit.label("ELIGE TU PRIMER RECLUTA", 30, UiKit.GOLD)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(title)
-	var sub := UiKit.label("Cada uno es único: nombre, Vida, Daño, arma y, a veces, un objeto 🎒. Al subir a Nv. %d elegirá especialidad." % TroopCard.SPECIALTY_LEVEL, 14, UiKit.MUTED)
+	var sub := UiKit.label("Elige UNO. Todos empiezan con la misma Vida y sin objeto: cambian el nombre, el Daño y el arma. Al subir a Nv. %d elegirá especialidad." % TroopCard.SPECIALTY_LEVEL, 14, UiKit.MUTED)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(sub)
 
@@ -65,9 +65,9 @@ func generate_offers() -> void:
 		_cards_box.remove_child(c)
 		c.queue_free()
 	for i in OFFER_COUNT:
-		var card := UnitFactory.make_recruit()
+		var card := UnitFactory.make_recruit(null, false, true)
 		offers.append(card)
-		var pc := UiKit.make_recruit_card(card, CARD_W)
+		var pc := UiKit.make_recruit_card(card, CARD_W, false)
 		var box: VBoxContainer = pc.get_meta("box")
 		var btn := Button.new()
 		btn.text = "Elegir"

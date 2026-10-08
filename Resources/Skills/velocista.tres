@@ -9,5 +9,4 @@ display_name = "Velocista"
 description = "+20 % de velocidad de movimiento."
 emoji = "👟"
 rarity = 0
-specialty_id = ""
 modifiers = {"move_speed_pct": 0.2}

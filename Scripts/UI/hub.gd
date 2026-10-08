@@ -235,11 +235,14 @@ func _make_slot(card: TroopCard, index: int) -> Control:
 		[card.unit_name, 18, UiKit.TEXT],
 		["%s · Nv. %d" % [UiKit.specialty_text(card), card.level], 12, spc],
 		["❤ %s   💥 %s" % [UiKit.health_text(s), UiKit.damage_text(s)], 13, UiKit.TEXT],
-		["%s %s" % [UiKit.emo(s.weapon.emoji), s.weapon.display_name], 13, UiKit.rarity_color(s.weapon.rarity)],
+		[s.weapon.display_name, 13, UiKit.rarity_color(s.weapon.rarity), s.weapon.get_icon()],
 		[_items_text(card), 13, UiKit.MUTED],
 		["⭐ %d habilidades" % card.skills.size(), 12, Color(0.75, 0.85, 1.0)],
 	]
 	for ln in lines:
+		if ln.size() > 3:
+			box.add_child(UiKit.icon_label(ln[3], ln[0], ln[1], ln[2], true))
+			continue
 		var l := UiKit.label(ln[0], ln[1], ln[2])
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l.clip_text = true

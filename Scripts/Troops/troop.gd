@@ -67,7 +67,7 @@ var _calm_check_t: float = 0.0
 var statuses: Dictionary = {}   # "burn": {dps, left, tick}
 var buffs: Dictionary = {}      # clave -> {stat, value, left}
 var camo_left: float = 0.0      # >0 = camuflada: los enemigos no la eligen como objetivo
-var still_time: float = 0.0     # segundos sin moverse (paciencia del francotirador)
+var still_time: float = 0.0     # segundos sin moverse (guardia del Vigía)
 var is_battle_started: bool = false
 var is_dead: bool = false
 
@@ -105,6 +105,9 @@ var _grab_radius: float = 40.0
 var _miss_text_cd: float = 0.0
 var _sprite_height: float = SPRITE_HEIGHT
 var _hurt_flash: float = 0.0
+## Muñeco animado (andar, disparar, recargar, morir). null si la especialidad trae sprite propio.
+var rig: TroopRig = null
+var _throw_left: float = 0.0   # s que le quedan al lanzamiento de granada
 
 
 func _ready() -> void:
@@ -239,9 +242,11 @@ func set_active_weapon(i: int, announce: bool = true) -> void:
 	reload_left = 0.0
 	attack_cooldown = maxf(attack_cooldown, WEAPON_SWAP_TIME)
 	weapon_swaps += 1
+	if rig:
+		rig.swap_weapon(stats.weapon)
 	if announce and is_inside_tree():
 		var w: WeaponData = stats.weapon
-		show_text("🔄 %s %s" % [EMOJI_FALLBACK.get(w.emoji, w.emoji), w.display_name], Color(0.75, 0.9, 1.0), 12, -12.0)
+		show_text("🔄 %s" % w.display_name, Color(0.75, 0.9, 1.0), 12, -12.0)
 	_update_name_label()
 	_update_reload_bar()
 
@@ -390,6 +395,20 @@ func _apply_sprite() -> void:
 		return
 	var tex: Texture2D = card.specialty.texture if card and card.specialty and card.specialty.texture else DEFAULT_TEXTURE
 	sprite.texture = tex
+	if has_custom_sprite():
+		if rig:
+			rig.queue_free()
+			rig = null
+		sprite.visible = true
+	else:
+		sprite.visible = false
+		if rig == null:
+			rig = TroopRig.new()
+			rig.name = "Rig"
+			add_child(rig)
+			move_child(rig, sprite.get_index() + 1)
+		rig.configure(_sprite_height, team == Team.ENEMY, card != null and card.is_boss)
+		rig.set_weapon(get_active_weapon() if not stats.is_empty() else card.get_weapon())
 	if tex:
 		var factor: float = _sprite_height / float(tex.get_height())
 		sprite.scale = Vector2(factor, factor)
@@ -426,14 +445,16 @@ func _layout_overlays() -> void:
 		rbar.offset_bottom = top + 4.0
 	# Nombre y nivel en dos líneas cortas sobre las piernas de la propia tropa: quedan dentro de
 	# su casilla (80 px) y no pisan a las tropas de la fila de arriba, de abajo ni de los lados.
+	# Nombre y nivel justo sobre la barra: siempre en planificación; en combate solo al pasar el
+	# ratón por encima (así no tapa a la tropa ni los textos de daño, que salen más arriba).
 	var label: Label = get_node_or_null("NameLabel")
 	if label:
-		var bottom: float = _sprite_height * 0.5
-		label.offset_left = -NAME_LABEL_HALF_W
-		label.offset_right = NAME_LABEL_HALF_W
-		label.offset_top = bottom - 27.0
-		label.offset_bottom = bottom - 2.0 # sin tocar la barra de vida de la fila de abajo
+		label.offset_left = -NAME_LABEL_HALF_W - 20.0
+		label.offset_right = NAME_LABEL_HALF_W + 20.0
+		label.offset_top = top - 21.0
+		label.offset_bottom = top - 7.0
 		label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		label.visible = false
 		label.clip_text = true
 		label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		label.add_theme_font_size_override("font_size", 10)
@@ -453,12 +474,21 @@ func _update_name_label() -> void:
 	var w: WeaponData = stats.get("weapon") as WeaponData if not stats.is_empty() else card.get_weapon()
 	if w == null:
 		w = card.get_weapon()
-	var emoji: String = w.emoji if w else ""
-	emoji = EMOJI_FALLBACK.get(emoji, emoji)
 	var nombre: String = ("☠ " + card.unit_name) if card.is_boss else card.unit_name
-	label.text = "%s\nNv.%d %s" % [nombre, card.level, emoji]
+	label.text = "%s · Nv.%d" % [nombre, card.level]
 	var col: Color = card.specialty.color if card.specialty else Color(1, 1, 1)
 	label.add_theme_color_override("font_color", col)
+
+
+
+## Nombre y nivel: siempre visibles en la fase de planificación; en combate, solo con el ratón encima.
+func _update_hover_label() -> void:
+	var label: Label = get_node_or_null("NameLabel")
+	if label == null or is_dead:
+		return
+	var want := (team == Team.PLAYER and not is_battle_started) or is_dragging or (is_battle_started and is_inside_tree() and get_global_mouse_position().distance_to(global_position) <= _grab_radius)
+	if label.visible != want:
+		label.visible = want
 
 
 const AMMO_COLOR := Color(0.95, 0.88, 0.55)   # balas que quedan en el cargador
@@ -495,6 +525,9 @@ func update_visuals() -> void:
 		col = col.lerp(Color(1.6, 1.6, 1.6), 0.5)
 	sprite.modulate = col
 	sprite.flip_h = team == Team.ENEMY
+	if rig:
+		rig.modulate = Color(col.r, col.g, col.b, rig.modulate.a)
+		rig.configure(_sprite_height, team == Team.ENEMY, card != null and card.is_boss)
 	modulate.a = CAMO_ALPHA if camo_left > 0.0 else 1.0
 
 
@@ -560,7 +593,7 @@ func get_max_health() -> float:
 	return float(stats.get("max_health", 100.0))
 
 func get_attack_range() -> float:
-	return float(stats.get("attack_range", 150.0))
+	return float(stats.get("attack_range", 150.0)) * (1.0 + get_buff_total("range_pct"))
 
 func get_move_speed() -> float:
 	return float(stats.get("move_speed", 90.0))
@@ -596,7 +629,7 @@ func get_next_level_cost() -> int:
 
 ## Probabilidad de acertar a una distancia. Cada arma tiene una distancia óptima:
 ##  - más lejos, la precisión cae (accuracy_falloff por cada 100 px);
-##  - más cerca, sube hasta +close_bonus a quemarropa (pistola, escopeta, fusil…). El francotirador
+##  - más cerca, sube hasta +close_bonus a quemarropa (pistola, escopeta, fusil…). El rifle de francotirador
 ##    tiene close_bonus negativo: con la mira telescópica es torpe contra un enemigo encima.
 static func hit_chance_for(s: Dictionary, dist: float, bonus: float = 0.0) -> float:
 	var opt: float = maxf(1.0, float(s.optimal_range))
@@ -623,6 +656,13 @@ func equip_item(item: Resource) -> void:
 # ================================================================ combate
 
 func _physics_process(delta: float) -> void:
+	_update_hover_label()
+	if rig and not is_dead:
+		if is_battle_started and _is_valid_target(target):
+			rig.aim_at(target.global_position)
+		else:
+			rig.clear_aim()
+		rig.animate(delta, is_battle_started and is_moving, velocity.length(), reloading)
 	if not is_battle_started or is_dead:
 		velocity = Vector2.ZERO
 		return
@@ -644,7 +684,9 @@ func _physics_process(delta: float) -> void:
 			update_visuals()
 	if effects:
 		effects.on_process(delta)
-	if reloading:
+	if _throw_left > 0.0:
+		_throw_left -= delta
+	if reloading and not is_moving:
 		reload_left -= delta
 		if reload_left <= 0.0:
 			reloading = false
@@ -730,7 +772,7 @@ static func field_rect(tree: SceneTree) -> Rect2:
 
 
 func _ai_step(delta: float) -> void:
-	var had_marks := suppressed_left > 0.0 or marked_left > 0.0 or is_frenzied() or is_moving
+	var had_marks := suppressed_left > 0.0 or marked_left > 0.0 or is_frenzied() or is_moving or (effects != null and effects.in_guard)
 	if suppressed_left > 0.0:
 		suppressed_left -= delta
 	if marked_left > 0.0:
@@ -741,6 +783,10 @@ func _ai_step(delta: float) -> void:
 	if not _is_valid_target(target) or _retarget_t <= 0.0:
 		find_target()
 		_retarget_t = RETARGET_TIME + randf() * 0.15
+	# Para recargar (y para lanzar una granada) hay que estar quieto.
+	if reloading or is_throwing():
+		_move(Vector2.ZERO, delta)
+		return
 	var speed := get_effective_speed()
 	var sep := _separation()
 	var vel := Vector2.ZERO
@@ -797,6 +843,12 @@ func _draw() -> void:
 			draw_line(foot + d * (r - 6.0), foot + d * (r + 5.0), Color(1.0, 0.25, 0.2, 0.9), 2.0)
 	if suppressed_left > 0.0:
 		draw_arc(foot, 16.0, 0.0, TAU, 24, Color(0.6, 0.75, 1.0, 0.55), 2.0, true)
+	if effects and effects.in_guard:
+		# Vigía en guardia: anillo discontinuo a los pies
+		var rg := 21.0 * (1.8 if card and card.is_boss else 1.0)
+		for k in 8:
+			var a0 := TAU * k / 8.0 + 0.12
+			draw_arc(foot, rg, a0, a0 + TAU / 8.0 - 0.3, 6, Color(0.55, 0.85, 1.0, 0.8), 2.0, true)
 	if is_frenzied():
 		# Aura roja que late + estelas de velocidad detrás cuando corre
 		var t := Time.get_ticks_msec() / 1000.0
@@ -876,7 +928,7 @@ func _is_valid_target(t) -> bool:
 			and not t.has_meta("is_drag_preview")
 
 
-## Peligrosidad de un enemigo (para el Tirador de élite): su DPS, más si dispara de lejos o cura.
+## Peligrosidad de un enemigo (para el Vigía): su DPS, más si dispara de lejos o cura.
 func threat_value() -> float:
 	var v: float = float(stats.get("dps", 1.0)) * (1.0 + get_attack_range() / 400.0)
 	if card and card.specialty and card.specialty.id in ["medico", "comunicaciones"]:
@@ -894,7 +946,7 @@ func target_score(t: Node) -> float:
 	return sc
 
 
-## Elige objetivo: el mejor por carril y distancia (o el más peligroso a tiro, si es Tirador de élite).
+## Elige objetivo: el mejor por carril y distancia (o el más peligroso a tiro, si es Vigía).
 ## Mantiene el actual salvo que otro sea claramente mejor. Ignora a los camuflados.
 func find_target() -> void:
 	var cur_valid := _is_valid_target(target)
@@ -925,8 +977,30 @@ func find_target() -> void:
 	target = best
 
 
+## Vigía: disparo de reacción inmediato contra un enemigo que acaba de entrar en su alcance
+## (no espera a la cadencia; sí necesita balas y no estar recargando ni lanzando). true si disparó.
+func reaction_shot(e: Node) -> bool:
+	if reloading or is_throwing() or not _is_valid_target(e):
+		return false
+	if int(stats.magazine) > 0 and ammo <= 0:
+		return false
+	var d := global_position.distance_to(e.global_position)
+	if d < float(stats.get("min_range", 0.0)):
+		return false
+	target = e
+	_retarget_t = RETARGET_TIME
+	if effects:
+		effects.reaction_pending = true
+	show_text("🔭 ¡Reacción!", Color(0.6, 0.8, 1.0), 11, -2.0)
+	attack_cooldown = 0.0
+	attack()
+	if effects:
+		effects.reaction_pending = false
+	return true
+
+
 func attack() -> void:
-	if not _is_valid_target(target) or reloading:
+	if not _is_valid_target(target) or reloading or is_throwing():
 		return
 	if int(stats.magazine) > 0 and ammo <= 0:
 		_on_magazine_empty()
@@ -949,13 +1023,22 @@ func attack() -> void:
 	# sacaba letales 4,5 veces más que un rifle y los enemigos "morían antes de tiempo")
 	var lethal_p: float = Economy.LETHAL_CHANCE / maxf(1.0, get_fire_rate())
 	var lethal_pending: bool = (randf() < lethal_p) if force_lethal < 0 else (force_lethal == 1)
+	# Primero se tira el acierto de cada perdigón; con la escopeta, cuantos más den a la vez, más pega cada uno
+	var pellet_hits: Array[bool] = []
+	var n_hit := 0
+	for i in int(stats.pellets):
+		var h: bool = (randf() < p) if force_hit < 0 else (force_hit == 1)
+		if i < force_hit_pattern.size():
+			h = bool(force_hit_pattern[i])
+		pellet_hits.append(h)
+		if h:
+			n_hit += 1
+	var stack: float = 1.0 + w.pellet_stack_bonus * maxf(0.0, float(n_hit - 1))
 	for i in int(stats.pellets):
 		pellets_fired += 1
-		var hit: bool = (randf() < p) if force_hit < 0 else (force_hit == 1)
-		if i < force_hit_pattern.size():
-			hit = bool(force_hit_pattern[i])
+		var hit: bool = pellet_hits[i]
 		var crit: bool = hit and ((randf() < crit_c) if force_crit < 0 else (force_crit == 1))
-		var dmg: float = base_dmg * (float(stats.crit_multiplier) if crit else 1.0)
+		var dmg: float = base_dmg * stack * (float(stats.crit_multiplier) if crit else 1.0)
 		if hit:
 			hits += 1
 			shot_hits += 1
@@ -971,8 +1054,8 @@ func attack() -> void:
 	# "¡Fallo!" solo si no acertó NINGÚN perdigón (una escopeta que da con el central no ha fallado)
 	if shot_hits == 0:
 		_show_miss()
-	if w.projectile == WeaponData.Projectile.LLAMA:
-		_fire_cosmetic_flame(dist)
+	if rig:
+		rig.fire()
 	attack_cooldown = 1.0 / maxf(0.05, get_fire_rate())
 	if int(stats.magazine) > 0:
 		ammo -= 1
@@ -1010,8 +1093,6 @@ func _fire_pellet(w: WeaponData, hit: bool, crit: bool, dmg: float, dist: float,
 	b.kind = w.projectile
 	b.family = w.family
 	b.speed = maxf(150.0, w.projectile_speed)
-	if w.projectile == WeaponData.Projectile.LLAMA:
-		b.speed = minf(b.speed, 260.0) # chorro más lento para que se vea
 	b.shooter_team = team
 	b.shooter = self
 	b.info = info
@@ -1026,28 +1107,32 @@ func _fire_pellet(w: WeaponData, hit: bool, crit: bool, dmg: float, dist: float,
 		var dev := randf_range(0.25, 0.45) * (1.0 if randf() < 0.5 else -1.0)
 		b.is_miss = true
 		b.target_pos = global_position + dir.rotated(dev) * dist
-	b.position = global_position + dir * 14.0
+	b.position = rig.muzzle_global() if rig else global_position + dir * 14.0
 	_fx_parent().add_child(b)
-
-
-## Bocanadas extra (solo visuales) para que el lanzallamas parezca un chorro.
-func _fire_cosmetic_flame(dist: float) -> void:
-	for i in 3:
-		var b = BULLET_SCENE.instantiate()
-		b.kind = WeaponData.Projectile.LLAMA
-		b.cosmetic = true
-		b.is_miss = true
-		b.speed = randf_range(190.0, 270.0)
-		b.shooter_team = team
-		b.shooter = self
-		var dir := global_position.direction_to(target.global_position)
-		b.target_pos = global_position + dir.rotated(randf_range(-0.28, 0.28)) * minf(dist, get_attack_range()) * randf_range(0.55, 1.0)
-		b.position = global_position + dir * 14.0
-		_fx_parent().add_child(b)
 
 
 ## Lanza una granada (objeto Granada): vuela en arco y explota donde esté el objetivo.
 func throw_grenade(tgt: Node2D, dmg: float, radius: float) -> void:
+	show_text("¡Granada!", Color(0.75, 0.9, 0.45), 11, 6.0)
+	grenades_thrown += 1
+	if rig == null:
+		_spawn_grenade(tgt, tgt.global_position, dmg, radius, global_position + Vector2(0, -10))
+		return
+	# Guarda el arma, saca la granada y la lanza: mientras tanto ni se mueve ni dispara
+	_throw_left = TroopRig.THROW_TIME
+	var aim_pos: Vector2 = tgt.global_position
+	rig.throw_grenade(func(from: Vector2) -> void:
+		if is_dead:
+			return
+		var to: Vector2 = tgt.global_position if is_instance_valid(tgt) and not tgt.is_dead else aim_pos
+		_spawn_grenade(tgt if is_instance_valid(tgt) else null, to, dmg, radius, from))
+
+
+func is_throwing() -> bool:
+	return _throw_left > 0.0
+
+
+func _spawn_grenade(tgt: Node2D, to: Vector2, dmg: float, radius: float, from: Vector2) -> void:
 	var b = BULLET_SCENE.instantiate()
 	b.kind = WeaponData.Projectile.GRANADA
 	b.speed = 320.0
@@ -1056,11 +1141,9 @@ func throw_grenade(tgt: Node2D, dmg: float, radius: float) -> void:
 	b.info = {"damage": dmg, "crit": false, "headshot": false, "burn_dps": 0.0, "burn_duration": 0.0, "attacker": self, "grenade": true}
 	b.aoe_radius = radius
 	b.target = tgt
-	b.target_pos = tgt.global_position
-	b.position = global_position + Vector2(0, -10)
+	b.target_pos = to
+	b.position = from
 	_fx_parent().add_child(b)
-	grenades_thrown += 1
-	show_text("¡Granada!", Color(0.75, 0.9, 0.45), 11, 6.0)
 
 
 ## Una bala que se desvió acabó dando a un enemigo: deja de contar como fallo.
@@ -1149,7 +1232,7 @@ func take_damage(amount: float) -> bool:
 	return false
 
 
-## Número de daño blanco sobre la cabeza ("-12"). Los impactos seguidos (subfusil, llamas) se
+## Número de daño blanco sobre la cabeza ("-12"). Los impactos seguidos (subfusil, ametralladora) se
 ## agrupan cada DAMAGE_TEXT_INTERVAL para que no se amontonen los textos.
 func _flush_damage_text() -> void:
 	if _dmg_pending < 0.5:
@@ -1223,4 +1306,19 @@ func die() -> void:
 		if is_instance_valid(t) and t != self and "team" in t and t.team == team and t.effects:
 			t.effects.on_ally_died(self)
 	died.emit(self)
-	queue_free()
+	# Animación de caída: deja de chocar y de mostrar barras, y se libera al terminar
+	var shape: CollisionShape2D = get_node_or_null("CollisionShape2D")
+	if shape:
+		shape.set_deferred("disabled", true)
+	for n in ["HealthBar", "ReloadBar", "NameLabel"]:
+		var c: CanvasItem = get_node_or_null(n)
+		if c:
+			c.visible = false
+	velocity = Vector2.ZERO
+	queue_redraw()
+	if rig:
+		z_index -= 1
+		var dur := rig.play_death()
+		get_tree().create_timer(dur).timeout.connect(queue_free)
+	else:
+		queue_free()

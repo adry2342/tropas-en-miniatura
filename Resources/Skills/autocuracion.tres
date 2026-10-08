@@ -9,6 +9,5 @@ display_name = "Autocuración"
 description = "Se cura un 2 % de su vida máx. por segundo."
 emoji = "💚"
 rarity = 1
-specialty_id = "medico"
 effect_id = "autocuracion"
 params = {"pct_per_sec": 0.02}

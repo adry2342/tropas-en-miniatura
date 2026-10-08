@@ -9,5 +9,4 @@ display_name = "Piel dura"
 description = "+50 de vida máxima."
 emoji = "🦏"
 rarity = 0
-specialty_id = ""
 modifiers = {"health_flat": 50.0}

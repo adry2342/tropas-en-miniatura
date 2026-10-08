@@ -274,9 +274,12 @@ func _make_card(offer: Dictionary, index: int) -> PanelContainer:
 
 	# Emoji grande
 	var emoji_txt := "🎯" if type == "training" else (UiKit.emo(String(res.get("emoji"))) if res else "?")
-	var emoji := UiKit.label(emoji_txt, 60, Color.WHITE)
-	emoji.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(emoji)
+	if res is WeaponData:
+		v.add_child(UiKit.icon_rect(res.get_icon(), 84))
+	else:
+		var emoji := UiKit.label(emoji_txt, 60, Color.WHITE)
+		emoji.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v.add_child(emoji)
 
 	var name_txt := "Entrenamiento" if type == "training" else (String(res.get("display_name")) if res else "?")
 	var name_l := UiKit.label(name_txt, 24, border_color.lightened(0.15))
@@ -395,7 +398,7 @@ func _details_weapon(box: VBoxContainer, w: WeaponData) -> void:
 				col = UiKit.DOWN
 		grid.add_child(UiKit.label(arrow, 13, col))
 	if cur:
-		box.add_child(UiKit.label("Comparado con su %s %s" % [UiKit.emo(cur.emoji), cur.display_name], 11, UiKit.MUTED))
+		box.add_child(UiKit.icon_label(cur.get_icon(), "Comparado con su %s" % cur.display_name, 11, UiKit.MUTED))
 
 
 # ---------------------------------------------------------------- interacción y animación

@@ -356,9 +356,12 @@ func _make_equip_card(index: int, res: Resource, coins: int) -> Control:
 
 	var icon_panel := UiKit.panel(Color(col.r * 0.16, col.g * 0.16, col.b * 0.16), Color(col, 0.35), 8, 1, 6)
 	box.add_child(icon_panel)
-	var emoji := UiKit.label(UiKit.emo(res.emoji), 40, UiKit.TEXT)
-	emoji.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon_panel.add_child(emoji)
+	if res is WeaponData:
+		icon_panel.add_child(UiKit.icon_rect(res.get_icon(), 56))
+	else:
+		var emoji := UiKit.label(UiKit.emo(res.emoji), 40, UiKit.TEXT)
+		emoji.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		icon_panel.add_child(emoji)
 
 	var name_l := UiKit.label(res.display_name, 19, col)
 	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -430,10 +433,19 @@ func _make_inv_cell(res: Resource) -> Control:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 3)
 	cell.add_child(v)
-	var n := UiKit.label("%s %s" % [UiKit.emo(res.emoji), res.display_name], 13, col)
-	n.clip_text = true
-	n.custom_minimum_size.x = 158
-	v.add_child(n)
+	var n: Label
+	if res is WeaponData:
+		var row := UiKit.icon_label(res.get_icon(), res.display_name, 13, col)
+		n = row.get_meta("label")
+		n.clip_text = true
+		n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.custom_minimum_size.x = 158
+		v.add_child(row)
+	else:
+		n = UiKit.label("%s %s" % [UiKit.emo(res.emoji), res.display_name], 13, col)
+		n.clip_text = true
+		n.custom_minimum_size.x = 158
+		v.add_child(n)
 	var t := UiKit.label(_type_line(res), 12, SOFT)
 	t.clip_text = true
 	v.add_child(t)

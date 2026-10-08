@@ -125,7 +125,10 @@ static func compute(card: TroopCard, weapon: WeaponData = null) -> Dictionary:
 
 ## DPS teórico (con precisión a distancia óptima, críticos y recarga). Para mostrar en la UI.
 static func estimate_dps(s: Dictionary) -> float:
-	var per_shot: float = s.hit_damage * s.pellets * s.accuracy \
+	var w: WeaponData = s.get("weapon") as WeaponData
+	var landed: float = s.pellets * s.accuracy
+	var stack: float = 1.0 + (w.pellet_stack_bonus if w else 0.0) * maxf(0.0, landed - 1.0)
+	var per_shot: float = s.hit_damage * landed * stack \
 			* (1.0 + s.crit_chance * (s.crit_multiplier - 1.0))
 	var rate: float = s.fire_rate
 	if s.magazine > 0:
@@ -176,7 +179,7 @@ static func describe(card: TroopCard) -> Array[String]:
 	var lines: Array[String] = []
 	lines.append("❤ Vida: %d" % roundi(s.max_health))
 	lines.append("💥 Daño: %s" % _pct(s.damage_mult))
-	var arma := "%s %s (%s)" % [w.emoji, w.display_name, w.get_family_name()]
+	var arma := "%s (%s)" % [w.display_name, w.get_family_name()]
 	if s.affinity:
 		arma += " · afín"
 	lines.append("Arma: " + arma)

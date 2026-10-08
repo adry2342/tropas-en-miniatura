@@ -9,6 +9,5 @@ display_name = "Sangre fría"
 description = "+0,25 al multiplicador de crítico. Requiere Ojo certero."
 emoji = "🧊"
 rarity = 1
-specialty_id = ""
 requires = Array[String](["ojo_certero"])
 modifiers = {"crit_mult": 0.25}

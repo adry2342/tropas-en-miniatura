@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Tropas en miniatura"
-config/version="0.7.3"
+config/version="0.7.4"
 run/main_scene="res://Scenes/UI/main_menu.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"

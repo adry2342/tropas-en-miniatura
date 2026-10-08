@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 id = "granada"
 display_name = "Granada"
-description = "Cada 6 s lanza una granada: 30 de daño en radio 70."
+description = "Cada 6 s, si hay un enemigo a media distancia (ni pegado ni lejos), guarda el arma y le lanza una granada: 30 de daño en radio 70."
 emoji = "💣"
 rarity = 1
 slot = 2

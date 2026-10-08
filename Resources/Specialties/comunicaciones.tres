@@ -16,4 +16,4 @@ passive_effect_id = "radio"
 passive_params = {"mark_interval": 4.0, "mark_duration": 4.0, "mark_bonus": 0.15, "mark_range": 450.0, "artillery_delay": 6.0, "shells": 3, "shell_damage": 26.0, "shell_radius": 60.0}
 modifiers = {}
 extra_effects = {}
-synergy_text = "Sus marcas dan +25 % de crítico a los Francotiradores y todo el pelotón remata antes al marcado."
+synergy_text = "Sus marcas dan +25 % de crítico a los Vigías y todo el pelotón remata antes al marcado."

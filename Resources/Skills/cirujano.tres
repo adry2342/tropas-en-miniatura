@@ -6,8 +6,7 @@
 script = ExtResource("1_script")
 id = "cirujano"
 display_name = "Cirujano"
-description = "Sus curaciones curan un 50 % más."
+description = "Todas sus curaciones curan un 50 % más (botiquín, autocuración y, si es Doctor, las que da a otros)."
 emoji = "⚕️"
 rarity = 1
-specialty_id = "medico"
 modifiers = {"heal_pct": 0.5}

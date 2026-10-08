@@ -9,5 +9,4 @@ display_name = "Esquiva"
 description = "+12 % de probabilidad de esquivar un impacto."
 emoji = "💨"
 rarity = 1
-specialty_id = ""
 modifiers = {"dodge": 0.12}

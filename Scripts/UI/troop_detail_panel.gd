@@ -32,6 +32,7 @@ var _level_label: Label
 var _gold_label: Label
 var _tiles_box: HBoxContainer
 var _weapon_title: Label
+var _weapon_icon: TextureRect
 var _weapon_note: Label
 var _weapon_grid: GridContainer
 var _arsenal_box: VBoxContainer
@@ -265,8 +266,12 @@ func _build_ui() -> void:
 	c1.add_child(_tiles_box)
 	var wsep := HSeparator.new()
 	c1.add_child(wsep)
-	_weapon_title = UiKit.label("", 16, UiKit.TEXT)
-	c1.add_child(_weapon_title)
+	var wrow := UiKit.icon_label(null, "", 16, UiKit.TEXT)
+	_weapon_icon = UiKit.icon_rect(null, 30)
+	wrow.add_child(_weapon_icon)
+	wrow.move_child(_weapon_icon, 0)
+	_weapon_title = wrow.get_meta("label")
+	c1.add_child(wrow)
 	_weapon_note = UiKit.label("", 12, UiKit.MUTED)
 	c1.add_child(_weapon_note)
 	_weapon_grid = GridContainer.new()
@@ -497,7 +502,8 @@ func _refresh() -> void:
 	_tiles_box.add_child(td)
 
 	var w: WeaponData = s.weapon
-	_weapon_title.text = "%s %s" % [UiKit.emo(w.emoji), w.display_name]
+	_weapon_title.text = w.display_name
+	_weapon_icon.texture = w.get_icon()
 	_weapon_title.add_theme_color_override("font_color", UiKit.rarity_color(w.rarity))
 	_weapon_note.text = "%s%s" % [w.get_family_name(), "  ·  ✓ afín: +15 % daño, +10 precisión" if s.affinity else ""]
 	_weapon_note.add_theme_color_override("font_color", UiKit.UP if s.affinity else UiKit.MUTED)
@@ -549,7 +555,8 @@ func _refresh_arsenal() -> void:
 		b.add_theme_font_size_override("font_size", 14)
 		var aff := card.specialty != null and card.specialty.is_affine(w)
 		var wl: int = card.get_weapon_level(w)
-		b.text = "%s  %s%s%s" % [UiKit.emo(w.emoji), w.display_name, ("  ★%d" % wl) if wl > 1 else "", "  · afín" if aff else ""]
+		UiKit.set_weapon_icon(b, w, 26)
+		b.text = " %s%s%s" % [w.display_name, ("  ★%d" % wl) if wl > 1 else "", "  · afín" if aff else ""]
 		b.tooltip_text = "%s · %s\nDaño %s · %.1f disp/s · alcance %d · precisión %s · cargador %s" % [
 			w.display_name, w.get_family_name(),
 			("%d×%d" % [w.pellets, roundi(w.damage)]) if w.pellets > 1 else str(roundi(w.damage)),
@@ -693,7 +700,8 @@ func _refresh_bench() -> void:
 		for wp in gsm.get_bench_weapons():
 			total += 1
 			var wb := Button.new()
-			wb.text = "＋ %s %s" % [UiKit.emo(wp.emoji), wp.display_name]
+			wb.text = "＋ %s" % wp.display_name
+			UiKit.set_weapon_icon(wb, wp, 20)
 			wb.tooltip_text = "%s · %s (arma)\nSe añade al arsenal de la tropa." % [wp.display_name, wp.get_family_name()]
 			wb.add_theme_font_size_override("font_size", 12)
 			wb.custom_minimum_size.y = 28

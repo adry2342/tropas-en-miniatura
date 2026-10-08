@@ -16,4 +16,4 @@ passive_effect_id = "supresion"
 passive_params = {"duration": 1.5}
 modifiers = {}
 extra_effects = {}
-synergy_text = "Con un Francotirador: los suprimidos reciben sus disparos a la cabeza (+25 % de crítico). Delante de un Doctor aguanta en primera línea mucho más."
+synergy_text = "Con un Vigía: los suprimidos reciben sus disparos a la cabeza (+25 % de crítico). Delante de un Doctor aguanta en primera línea mucho más."

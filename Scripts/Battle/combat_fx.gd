@@ -54,31 +54,146 @@ static func text(parent: Node, pos: Vector2, txt: String, color: Color, size: in
 static func explosion(parent: Node, pos: Vector2, radius: float) -> void:
 	if parent == null or not is_instance_valid(parent):
 		return
-	var core := FxCircle.new()
-	core.color = Color(1.0, 0.62, 0.15, 0.55)
-	core.radius = radius * 0.35
-	core.position = pos
-	core.z_index = 20
-	parent.add_child(core)
-	var tw := core.create_tween()
-	tw.set_parallel(true)
-	tw.tween_property(core, "radius", radius, 0.25).set_ease(Tween.EASE_OUT)
-	tw.tween_property(core, "modulate:a", 0.0, 0.45).set_delay(0.1)
-	tw.chain().tween_callback(core.queue_free)
+	var scorch := FxScorch.new()
+	scorch.radius = radius
+	scorch.position = pos
+	scorch.z_index = 1
+	parent.add_child(scorch)
+	var fx := FxExplosion.new()
+	fx.radius = radius
+	fx.position = pos
+	fx.z_index = 20
+	parent.add_child(fx)
 
-	var ring := FxCircle.new()
-	ring.filled = false
-	ring.width = 3.0
-	ring.color = Color(1.0, 0.9, 0.5, 0.9)
-	ring.radius = radius * 0.5
-	ring.position = pos
-	ring.z_index = 21
-	parent.add_child(ring)
-	var tw2 := ring.create_tween()
-	tw2.set_parallel(true)
-	tw2.tween_property(ring, "radius", radius, 0.2).set_ease(Tween.EASE_OUT)
-	tw2.tween_property(ring, "modulate:a", 0.0, 0.5).set_delay(0.15)
-	tw2.chain().tween_callback(ring.queue_free)
+
+static func _poly_circle(ci: CanvasItem, c: Vector2, r: float, col: Color, seg: int = 64) -> void:
+	if r <= 0.5 or col.a <= 0.0:
+		return
+	var pts := PackedVector2Array()
+	for i in seg:
+		pts.append(c + Vector2.from_angle(TAU * i / seg) * r)
+	ci.draw_colored_polygon(pts, col)
+
+
+## Mancha de quemado en el suelo: aparece con la explosión y se va despacio.
+class FxScorch extends Node2D:
+	var radius: float = 60.0
+	var _t: float = 0.0
+
+	func _process(delta: float) -> void:
+		_t += delta
+		if _t >= 1.8:
+			queue_free()
+		queue_redraw()
+
+	func _draw() -> void:
+		var a := clampf(_t / 0.15, 0.0, 1.0) * clampf(1.0 - (_t - 0.6) / 1.2, 0.0, 1.0) * 0.28
+		draw_set_transform(Vector2(0, radius * 0.1), 0.0, Vector2(1.0, 0.42))
+		CombatFX._poly_circle(self, Vector2.ZERO, radius * 0.6, Color(0.07, 0.05, 0.04, a))
+		CombatFX._poly_circle(self, Vector2.ZERO, radius * 0.35, Color(0.05, 0.03, 0.02, a))
+
+
+## Explosión: fogonazo blanco, bola de fuego que se vuelve humo y sube, onda expansiva fina hasta
+## el radio de daño y chispas. Va dentro de un CanvasGroup: las bocanadas se funden en UNA sola
+## nube (sin "aros" de transparencias superpuestas) y se desvanece entera de golpe.
+class FxExplosion extends CanvasGroup:
+	const DURATION := 0.85
+	var radius: float = 60.0
+	var t: float = 0.0
+	var puffs: Array = []   # [offset, radio, retraso, deriva]
+	var sparks: Array = []  # [dirección, distancia, largo]
+	var _cloud: Node2D
+	var _over: Node2D
+
+	func _ready() -> void:
+		for i in 7:
+			var a := TAU * i / 7.0 + randf_range(-0.3, 0.3)
+			var d := randf_range(0.18, 0.42) * radius
+			puffs.append([Vector2.from_angle(a) * d * Vector2(1.0, 0.7), randf_range(0.3, 0.42) * radius, randf_range(0.0, 0.06), randf_range(14.0, 30.0)])
+		puffs.append([Vector2.ZERO, 0.52 * radius, 0.0, 22.0])
+		for i in 12:
+			sparks.append([Vector2.from_angle(randf() * TAU), randf_range(0.8, 1.2) * radius, randf_range(5.0, 11.0)])
+		_cloud = _Painter.new(self, 0)
+		add_child(_cloud)
+		# Onda, fogonazo y chispas van FUERA del grupo (encima y con su propio brillo)
+		_over = _Painter.new(self, 1)
+		_over.z_index = 21
+		get_parent().add_child.call_deferred(_over)
+
+	func _process(delta: float) -> void:
+		t += delta
+		if is_instance_valid(_over):
+			_over.position = position
+			_over.queue_redraw()
+		if t >= DURATION:
+			if is_instance_valid(_over):
+				_over.queue_free()
+			queue_free()
+			return
+		var u := t / DURATION
+		self_modulate.a = 1.0 if u < 0.5 else clampf(1.0 - (u - 0.5) / 0.5, 0.0, 1.0)
+		_cloud.queue_redraw()
+
+	## Estado de cada bocanada: [centro, radio, calor (1 fuego → 0 humo)] o null si aún no salió.
+	func _puff_state(pf: Array):
+		var lt: float = t - float(pf[2])
+		if lt <= 0.0:
+			return null
+		var k := clampf(lt / (DURATION - float(pf[2])), 0.0, 1.0)
+		var grow := 1.0 - pow(1.0 - clampf(lt / 0.15, 0.0, 1.0), 3.0)
+		var r: float = float(pf[1]) * (0.35 + 0.65 * grow) * (1.0 + 0.35 * k)
+		var c: Vector2 = pf[0] * (0.5 + 0.7 * grow) + Vector2(0, -float(pf[3]) * k * k)
+		return [c, r, clampf(1.0 - k * 2.0, 0.0, 1.0)]
+
+	## Tres pasadas (contorno, cuerpo, brillo) para que la nube tenga UN solo contorno exterior.
+	func draw_cloud(ci: CanvasItem) -> void:
+		var st: Array = []
+		for pf in puffs:
+			var p = _puff_state(pf)
+			if p != null:
+				st.append(p)
+		for p in st:
+			CombatFX._poly_circle(ci, p[0], p[1], Color(0.24, 0.2, 0.2).lerp(Color(0.62, 0.16, 0.04), p[2]))
+		for p in st:
+			CombatFX._poly_circle(ci, p[0] + Vector2(0, -p[1] * 0.06), p[1] * 0.86, Color(0.45, 0.43, 0.42).lerp(Color(1.0, 0.55, 0.12), p[2]))
+		for p in st:
+			CombatFX._poly_circle(ci, p[0] + Vector2(-p[1] * 0.2, -p[1] * 0.3), p[1] * 0.42, Color(0.6, 0.58, 0.56).lerp(Color(1.0, 0.9, 0.5), p[2]))
+
+	func draw_over(ci: CanvasItem) -> void:
+		# Onda expansiva: anillo fino y redondo que llega justo al radio de daño
+		var wave := clampf(t / 0.2, 0.0, 1.0)
+		var wr := radius * (1.0 - pow(1.0 - wave, 3.0))
+		var wa := 0.8 * (1.0 - clampf((t - 0.1) / 0.22, 0.0, 1.0))
+		if wa > 0.0 and wr > 1.0:
+			ci.draw_arc(Vector2.ZERO, wr, 0.0, TAU, 64, Color(1.0, 0.93, 0.72, wa), lerpf(3.5, 1.5, wave), true)
+		# Fogonazo blanco (muy corto)
+		var fl := 1.0 - clampf(t / 0.08, 0.0, 1.0)
+		CombatFX._poly_circle(ci, Vector2.ZERO, radius * 0.4, Color(1.0, 0.98, 0.88, fl))
+		# Chispas
+		var st := clampf(t / 0.32, 0.0, 1.0)
+		if st < 1.0:
+			for sp in sparks:
+				var dir: Vector2 = sp[0]
+				var p0: Vector2 = dir * float(sp[1]) * (1.0 - pow(1.0 - st, 2.0))
+				ci.draw_line(p0, p0 - dir * float(sp[2]) * (1.0 - st) * 1.6, Color(1.0, 0.85, 0.4, 1.0 - st), 2.0, true)
+
+
+## Nodo que pinta una capa de la explosión (0 = nube dentro del grupo, 1 = efectos encima).
+class _Painter extends Node2D:
+	var fx
+	var layer: int = 0
+
+	func _init(owner_fx, l: int) -> void:
+		fx = owner_fx
+		layer = l
+
+	func _draw() -> void:
+		if not is_instance_valid(fx):
+			return
+		if layer == 0:
+			fx.draw_cloud(self)
+		else:
+			fx.draw_over(self)
 
 
 ## Destello pequeño (golpe cuerpo a cuerpo, chispa de impacto, bocanada de humo).

@@ -7,7 +7,6 @@ extends Resource
 @export_multiline var description: String = ""
 @export var emoji: String = "⭐"
 @export var rarity: int = 0
-@export var specialty_id: String = ""     # "" = general; si no, solo para esa especialidad
 @export var requires: Array[String] = []  # ids de habilidades necesarias
 @export var stackable: bool = false
 @export var modifiers: Dictionary = {}    # SPEC sección 3

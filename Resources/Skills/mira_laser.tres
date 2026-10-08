@@ -9,5 +9,4 @@ display_name = "Mira láser"
 description = "+10 % de crítico y +10 % de precisión."
 emoji = "🔴"
 rarity = 1
-specialty_id = "francotirador"
 modifiers = {"crit_chance": 0.1, "accuracy": 0.1}

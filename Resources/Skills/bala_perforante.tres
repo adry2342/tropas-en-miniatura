@@ -9,5 +9,4 @@ display_name = "Bala perforante"
 description = "Sus balas atraviesan a 1 enemigo más."
 emoji = "🏹"
 rarity = 1
-specialty_id = "francotirador"
 modifiers = {"pierce": 1.0}

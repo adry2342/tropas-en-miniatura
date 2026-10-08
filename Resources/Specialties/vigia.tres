@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpecialtyData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/specialty_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "vigia"
+display_name = "Vigía"
+emoji = "🔭"
+color = Color(0.55, 0.75, 1.0, 1)
+affine_families = Array[int]([3, 1])
+description = "El que vigila el frente. Cuando se planta, cubre una zona: nadie entra en ella sin recibir un disparo. Afín a armas de precisión y automáticas."
+passive_name = "En guardia"
+passive_description = "Quieto 1,2 s entra En guardia: +15 % de alcance y +10 % de precisión. Cada enemigo que entra en su alcance mientras está En guardia recibe al instante un disparo de reacción (+30 % de crítico, +25 % de daño). Además apunta al enemigo más peligroso a su alcance (francotiradores, bazucas, doctores, radios)."
+passive_effect_id = "guardia"
+passive_params = {"still_time": 1.2, "range_pct": 0.15, "accuracy": 0.1, "reaction_crit": 0.3, "reaction_damage": 0.25, "reaction_cd": 0.8}
+modifiers = {}
+extra_effects = {"tirador_elite": {"crit_vs_pinned": 0.25}}
+synergy_text = "+25 % de crítico contra enemigos suprimidos (Soldado) o marcados (Radioperador). Ponlo detrás de primera línea: si tiene que moverse pierde la guardia."

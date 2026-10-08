@@ -3,9 +3,9 @@ extends Node2D
 ## - acierto: va hacia el objetivo y le hace daño al llegar (con `pierce` sigue y atraviesa más enemigos);
 ## - fallo: sale desviado. Si una BALA desviada se cruza con alguien en su trayectoria le da igualmente
 ##   (cuenta como acierto); si es un compañero del tirador, es fuego amigo. Solo las balas: ni las
-##   explosiones, ni las llamas, ni el cuerpo a cuerpo dañan a los aliados.
+##   explosiones ni el cuerpo a cuerpo dañan a los aliados.
 ##   Los explosivos fallados estallan donde caen (solo dañan a enemigos).
-## El aspecto depende del tipo (BALA según familia, GRANADA en arco, COHETE, LLAMA).
+## El aspecto depende del tipo (BALA según familia, GRANADA en arco, COHETE).
 
 const PIERCE_RADIUS := 16.0
 const MISS_EXTRA_TRAVEL := 140.0
@@ -25,7 +25,7 @@ var is_miss: bool = false
 var aoe_radius: float = 0.0
 var pierce: int = 0
 var visual_spread: float = 0.0
-var cosmetic: bool = false         # solo visual (bocanadas extra del lanzallamas)
+var cosmetic: bool = false         # solo visual (no hace daño)
 var shooter: Node2D = null         # quien disparó (nunca se da a sí mismo)
 
 var _dir: Vector2 = Vector2.RIGHT
@@ -51,8 +51,6 @@ func _ready() -> void:
 	rotation = _dir.angle()
 	var dist := _start.distance_to(target_pos)
 	_max_travel = dist + MISS_EXTRA_TRAVEL
-	if kind == WeaponData.Projectile.LLAMA:
-		_max_travel = dist + 25.0
 	if kind == WeaponData.Projectile.GRANADA:
 		_flight_time = maxf(GRENADE_MIN_TIME, dist / maxf(speed, 50.0))
 		_arc_height = clampf(dist * 0.35, 25.0, 90.0)
@@ -118,7 +116,7 @@ func _process_bullet(delta: float) -> void:
 				_already_hit.append(target)
 				if not cosmetic:
 					CombatFX.apply_hit(target, info)
-				if kind == WeaponData.Projectile.LLAMA or pierce <= 0:
+				if pierce <= 0:
 					_finish()
 					return
 				return
@@ -218,8 +216,6 @@ func _finish() -> void:
 	if _finished:
 		return
 	_finished = true
-	if kind == WeaponData.Projectile.LLAMA:
-		CombatFX.flash(get_parent(), global_position, Color(1.0, 0.5, 0.1, 0.6), 12.0, 0.2)
 	queue_free()
 
 
@@ -241,13 +237,6 @@ func _draw() -> void:
 			draw_colored_polygon(PackedVector2Array([Vector2(-10, -4), Vector2(-20 * flick, 0), Vector2(-10, 4)]), Color(1.0, 0.6, 0.1, 0.9))
 			draw_rect(Rect2(-10, -3.5, 16, 7), Color(0.42, 0.45, 0.38))
 			draw_colored_polygon(PackedVector2Array([Vector2(6, -3.5), Vector2(12, 0), Vector2(6, 3.5)]), Color(0.85, 0.2, 0.15))
-		WeaponData.Projectile.LLAMA:
-			var t := clampf(_life / 0.4, 0.0, 1.0)
-			var r := lerpf(6.0, 18.0, t)
-			var col := Color(1.0, 0.85, 0.3).lerp(Color(0.95, 0.3, 0.05), t)
-			col.a = lerpf(0.9, 0.3, t)
-			draw_circle(Vector2.ZERO, r, col)
-			draw_circle(Vector2.ZERO, r * 0.45, Color(1.0, 0.95, 0.6, col.a))
 		_:
 			match family:
 				WeaponData.Family.PRECISION:

@@ -2,7 +2,7 @@ class_name SpecialtyData
 extends Resource
 ## Especialidad que la tropa elige al llegar a Nv. 5 (o con la que ya viene algún recluta de la Intendencia) (deja de ser Recluta).
 
-@export var id: String = ""               # "soldado","medico"(Doctor),"comunicaciones"(Radioperador),"mecanico","infiltrado","francotirador","saboteador"
+@export var id: String = ""               # "soldado","medico"(Doctor),"comunicaciones"(Radioperador),"mecanico","infiltrado","vigia","saboteador"
 @export var display_name: String = ""
 @export_multiline var description: String = ""
 @export var emoji: String = "⭐"

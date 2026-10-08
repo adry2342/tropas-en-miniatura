@@ -9,6 +9,5 @@ display_name = "Traje ghillie"
 description = "Los enemigos no le apuntan durante los 6 primeros segundos."
 emoji = "🍃"
 rarity = 1
-specialty_id = "francotirador"
 effect_id = "camuflaje"
 params = {"duration": 6.0}
