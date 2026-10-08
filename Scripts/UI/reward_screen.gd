@@ -90,6 +90,20 @@ func _display_round_summary() -> void:
 	points_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(points_label)
 
+	# Medallas de mando (solo al derrotar un jefe): ya están sumadas al perfil
+	var medals: int = summary.get("medals", 0)
+	if medals > 0:
+		var pm := get_node_or_null("/root/ProfileManager")
+		var medals_label := UiKit.label("🏅 +%d Medallas de mando por derrotar al jefe%s" % [medals,
+				("  (total %d)" % int(pm.medals)) if pm else ""], 18, UiKit.GOLD)
+		medals_label.name = "BossMedalsLabel"
+		medals_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		medals_label.add_theme_constant_override("outline_size", 4)
+		medals_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+		medals_label.mouse_filter = Control.MOUSE_FILTER_PASS
+		medals_label.tooltip_text = SpecialtyProgression.medals_hint() + "\nGástalas en el terminal de Especialidades del Centro de mando."
+		vbox.add_child(medals_label)
+
 	# Línea 6: Totales (destacados: cifras grandes con icono)
 	var total_coins: int = summary.get("coins_total", 0)
 	var total_points: int = summary.get("points_total", 0)

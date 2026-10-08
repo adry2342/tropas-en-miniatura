@@ -6,7 +6,7 @@
 
 ## ⬇️ Descargar
 
-Última versión: **[v0.7.2 (alpha)](https://github.com/adry2342/tropas-en-miniatura/releases/latest)** — Windows (.exe), Android (.apk), Linux y proyecto de Godot (.zip). Novedades en el [CHANGELOG](CHANGELOG.md).
+Última versión: **[v0.7.3 (alpha)](https://github.com/adry2342/tropas-en-miniatura/releases/latest)** — Windows (.exe), Android (.apk), Linux y proyecto de Godot (.zip). Novedades en el [CHANGELOG](CHANGELOG.md).
 
 > Proyecto en desarrollo activo. Interfaz y textos en español. Pensado para PC; el Centro de mando ya está preparado también para móvil en horizontal.
 
@@ -20,10 +20,10 @@
 - [Capturas](#capturas)
 - [Cómo abrirlo y ejecutarlo](#cómo-abrirlo-y-ejecutarlo)
 - [Estructura del proyecto](#estructura-del-proyecto)
-- [Tests](#tests)
 - [Partidas guardadas](#partidas-guardadas)
 - [Estado y próximos pasos](#estado-y-próximos-pasos)
-- [Créditos y licencia](#créditos-y-licencia)
+- [Autores](#autores)
+- [Licencia](#licencia)
 
 ---
 
@@ -35,7 +35,7 @@
    - **Planificación**: arrastras tus tropas a tu zona del tablero (5×5), compras en la **Intendencia** (reclutas, objetos y armas con 💰 monedas) y subes de nivel a tus soldados con ⭐ Puntos de Mando.
    - **Combate**: las tropas luchan solas. Cada arma tiene su alcance, precisión y distancia de combate preferida.
 4. Las rondas son **infinitas**: cada 10 rondas hay un **Jefe de Sector**, y a partir de la ronda 11 una ruleta puede hacer aparecer al **Jefe Final** (+0,5 % por ronda). Vencerlo gana la partida.
-5. Al terminar recibes **🏅 Medallas de mando** para mejorar tus especialidades, y si ganaste puedes **criogenizar a uno de tus soldados** como veterano.
+5. Cada jefe que derrotas te da **🏅 Medallas de mando** para mejorar tus especialidades, y si vences al Jefe Final puedes **criogenizar a uno de tus soldados** como veterano.
 
 ## Características
 
@@ -66,19 +66,23 @@ Cada especialidad es afín a una familia de armas (+15 % de daño y +10 de preci
 
 ## Progresión entre partidas
 
-- **🏅 Medallas de mando**: 1 por cada 5 rondas ganadas, 2 por cada Jefe de Sector y 5 por el Jefe Final.
-- **Árbol de especialidades**: cada especialidad tiene un árbol en línea recta (rango 0 = la especialidad, rangos 1–4 = mejoras) que se compra con medallas y afecta solo a tus tropas. *Las mejoras concretas están pendientes de definir.*
+- **🏅 Medallas de mando**: se ganan al momento al derrotar a un jefe: Jefe de Sector 3 (+1 por cada sector siguiente) y Jefe Final 8.
+- **Árbol de especialidades**: en el terminal del Centro de mando cada especialidad tiene un árbol de 4 mejoras (rango 0 = la especialidad) que se compra con medallas y afecta solo a tus tropas. *Las mejoras concretas están pendientes de definir.*
 - **Veteranos**: al vencer al Jefe Final eliges a uno de tus soldados (de todo tu ejército) y queda criogenizado en el Centro de mando con todo su equipo. Hay **5 tubos**; con los 5 llenos se abre el hangar del **Modo Infinito** *(próximamente)*. Un veterano se puede eliminar manteniendo pulsado el botón y confirmando.
 
 ## Capturas
+
+| Códice (libro) | Terminal de especialidades |
+|---|---|
+| ![Códice](docs/img/codice.png) | ![Especialidades](docs/img/especialidades.png) |
 
 | Planificación | Combate |
 |---|---|
 | ![Planificación](docs/img/planificacion.png) | ![Combate](docs/img/combate.png) |
 
-| Árbol de especialidades |
+| Ficha de un arma en el Códice |
 |---|
-| ![Especialidades](docs/img/especialidades.png) |
+| ![Códice: armas](docs/img/codice_armas.png) |
 
 ## Cómo abrirlo y ejecutarlo
 
@@ -108,27 +112,12 @@ Scripts/
   Troops/          Comportamiento e IA de las tropas
   UI/              Interfaz: Centro de mando, ficha de tropa, Códice, árbol, tienda…
 docs/img/          Capturas para este README
-_dev/              Tests automáticos, simuladores y documentos de diseño (no forman parte del juego)
+_dev/              Documentos de diseño, generadores de arte y herramienta de builds (no forman parte del juego)
 addons/godot_ai/   Plugin del editor usado durante el desarrollo (MIT)
 ```
 
 Todo el contenido (armas, objetos, habilidades, especialidades) se registra en `Scripts/Systems/game_content.gd`. Las estadísticas finales de una tropa salen siempre de `TroopStats.compute(card)`.
 
-## Tests
-
-En `_dev/` hay escenas de test que se ejecutan desde el editor (abre la escena y pulsa **F6**). Cada una imprime `TEST PASS` / `TEST FAIL` y termina con `TEST DONE: N fallos (M ok)`:
-
-| Test | Qué cubre |
-|---|---|
-| `test_core` | Contenido, estadísticas, subida de nivel, economía básica |
-| `test_combat`, `test_v4` | Combate, IA, armas, especialidades en batalla |
-| `test_e2e` | Partida completa desde el menú *(mueve el ratón real; no lo toques mientras corre)* |
-| `test_centro_mando` | Centro de mando: objetos clicables, confirmaciones, tubos, escalado PC/móvil |
-| `test_especialidades_progreso` | Medallas, árbol, desbloqueo de especialidades, botones de pruebas |
-| `test_cuartel` | Veteranos y panel de fin de partida |
-| otros (`test_ui`, `test_v31`, `test_v32`, `test_economia`…) | Interfaz, tienda, despliegue y versiones anteriores |
-
-También hay un simulador de partidas completas (`_dev/run_sim.tscn`) para equilibrar la dificultad.
 
 ## Partidas guardadas
 
@@ -146,10 +135,15 @@ También hay un simulador de partidas completas (`_dev/run_sim.tscn`) para equil
 - [ ] Sonido y música.
 - [ ] Adaptar la interfaz de la partida a móvil.
 
-## Créditos y licencia
+## Autores
 
-- Desarrollo y diseño: **adry2342**.
-- Plugin de editor [Godot AI](addons/godot_ai/README.md) (licencia MIT, incluida en `addons/godot_ai/LICENSE`).
-- Motor: [Godot Engine](https://godotengine.org) (MIT).
+- **adry2342** — desarrollo y diseño ([GitHub](https://github.com/adry2342))
+- **Sergio García Figueiras** — desarrollo y diseño
 
-Este repositorio aún no tiene licencia propia: salvo el plugin incluido, **todos los derechos reservados** por el autor.
+Motor: [Godot Engine](https://godotengine.org) (MIT). Plugin de editor [Godot AI](addons/godot_ai/README.md) (MIT, en `addons/godot_ai/LICENSE`). Fuentes Cinzel, EB Garamond y Share Tech Mono (SIL OFL 1.1).
+
+## Licencia
+
+© 2026 adry2342 y Sergio García Figueiras. **Todos los derechos reservados.**
+
+Este proyecto **no es de código abierto**. Su código, arte, diseño y nombre pertenecen a sus autores; no se permite copiarlo, modificarlo, redistribuirlo ni usarlo en otros proyectos sin permiso por escrito. Puedes descargar las versiones publicadas para jugar. Detalles y excepciones en [LICENSE](LICENSE).

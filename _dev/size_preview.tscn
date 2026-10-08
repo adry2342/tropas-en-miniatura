@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://ljsc7x4x0cpn"]
-
-[ext_resource type="Script" path="res://_dev/size_preview.gd" id="1_2idap"]
-
-[node name="SizePreview" type="Node2D" unique_id=1866589834]
-script = ExtResource("1_2idap")

@@ -1,0 +1,22 @@
+Copyright (c) 2026 adry2342 y Sergio García Figueiras. Todos los derechos reservados.
+
+Tropas en miniatura (código fuente, arte, diseño, textos, nombres y demás contenido
+de este repositorio) es una obra protegida y propiedad exclusiva de sus autores.
+
+Que el repositorio sea visible NO concede ninguna licencia. Sin permiso previo y por
+escrito de los autores queda prohibido:
+  - copiar, modificar, adaptar o crear obras derivadas de cualquier parte del proyecto;
+  - distribuir, publicar, sublicenciar o vender el juego, su código o sus recursos;
+  - usar el código, el arte, el diseño o el nombre en otros proyectos, comerciales o no.
+
+Solo se permite ver el repositorio en GitHub y descargar las versiones publicadas
+para jugarlas a título personal.
+
+Excepciones (recursos de terceros, con su propia licencia):
+  - Fuentes Cinzel, EB Garamond y Share Tech Mono (Assets/Fonts): SIL Open Font
+    License 1.1, ver los archivos OFL_*.txt.
+  - Motor Godot Engine: licencia MIT (https://godotengine.org/license).
+  - Complemento addons/godot_ai: licencia propia de sus autores.
+
+Para cualquier permiso, contacta con los autores a través de
+https://github.com/adry2342.

@@ -2,6 +2,25 @@
 
 Todas las versiones notables de **Tropas en miniatura**. Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones con [SemVer](https://semver.org/lang/es/).
 
+## [0.7.3] - 2026-10-08
+
+### Añadido
+- **Códice como libro**: el Archivo abre un libro de cuero con hojas de pergamino. La tapa se levanta al abrirlo y las hojas se pasan con animación (botones de las esquinas, ←/→, rueda del ratón o cintas de marcapáginas). Un capítulo por doble página: Habilidades, Objetos, Armas y Especialidades. Fuentes Cinzel y EB Garamond (OFL).
+- **Varias armas en combate**: todas las armas del arsenal van equipadas. La tropa usa la **principal**; si se queda sin balas mientras le disparan y otra arma tiene munición y alcanza al objetivo, cambia a esa en vez de recargar. Cuando pasa el peligro vuelve a la principal y la recarga.
+- **Terminal de especialidades** rediseñado: pantalla de fósforo verde con encendido de CRT, fichas de unidad, árbol de hexágonos unidos por circuitos con pulso de energía y expediente con la ficha de cada mejora.
+- **Cartel de SALIDA** en la pared del Centro de mando para volver al menú principal (sustituye al botón).
+
+### Cambiado
+- **🏅 Medallas de mando**: se ganan al momento al derrotar a cada jefe (Jefe de Sector 3, +1 por cada sector siguiente; Jefe Final 8) en lugar de al terminar la partida. Se muestran en la pantalla de recompensas y en el resumen de fin de partida.
+- Cámaras criogénicas redibujadas con una perspectiva coherente (tapa, cristal y base alineados en el mismo eje).
+- Arsenal de la ficha de tropa: «PRINCIPAL» y «Reserva · hacer principal».
+- El Códice pasa varias hojas seguidas al saltar capítulos; el paso de hoja con A/D se quita (siguen las flechas).
+- Las tuberías de las cámaras ya no tapan el letrero «Bahía criogénica».
+
+### Eliminado
+- Marcador de medallas y jefes finales del Centro de mando.
+- Tests y simuladores de `_dev/` (no aportaban en esta fase).
+
 ## [0.7.2] - 2026-10-07 — Primera release pública (alpha)
 
 ### Añadido

@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cjiaxj4m5rqxr"]
 
 [ext_resource type="Script" path="res://_dev/test_progresion.gd" id="1_test"]
 
-[node name="TestProgresion" type="Node"]
+[node name="TestProgresion" type="Node" unique_id=1809142592]
 script = ExtResource("1_test")

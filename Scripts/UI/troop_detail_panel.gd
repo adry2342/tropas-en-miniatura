@@ -2,7 +2,7 @@ extends CanvasLayer
 ## Submenú de tropa (SPEC v2 §9). Funciona igual con un nodo tropa del tablero (open) que con
 ## un TroopCard de la reserva (open_card): todo se lee y se escribe en el card.
 ##  - Estadísticas de TroopStats (Vida y Daño destacados; las del arma aparte).
-##  - Arsenal (clic = equipar), 3 huecos de objeto, objetos sueltos de la reserva que caben.
+##  - Arsenal (todas equipadas; clic = arma principal), 3 huecos de objeto, objetos sueltos de la reserva que caben.
 ##  - Habilidades (no ocupan hueco) y pasiva de la especialidad.
 ##  - Subir de nivel con Puntos de Mando (⭐) → modal de elección (level_up_choice.gd).
 
@@ -282,7 +282,7 @@ func _build_ui() -> void:
 	var c2 := VBoxContainer.new()
 	c2.add_theme_constant_override("separation", 6)
 	col2.add_child(c2)
-	c2.add_child(_section_title("ARSENAL  ·  clic para equipar"))
+	c2.add_child(_section_title("ARSENAL  ·  clic = arma principal"))
 	var ascroll := ScrollContainer.new()
 	ascroll.custom_minimum_size.y = 96
 	ascroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -556,7 +556,7 @@ func _refresh_arsenal() -> void:
 			w.fire_rate, roundi(w.attack_range), UiKit.pct(w.accuracy), UiKit.magazine_text(w.magazine)]
 		if equipped:
 			UiKit.style_button(b, Color(0.12, 0.26, 0.16), UiKit.UP, Color.WHITE)
-			var tag := UiKit.label("EQUIPADA ✓", 11, UiKit.UP)
+			var tag := UiKit.label("PRINCIPAL ✓", 11, UiKit.UP)
 			tag.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
 			tag.offset_left = -90
 			tag.offset_right = -10
@@ -564,14 +564,19 @@ func _refresh_arsenal() -> void:
 			b.add_child(tag)
 		else:
 			UiKit.style_button(b, UiKit.PANEL_2, UiKit.BORDER)
-			var tag2 := UiKit.label("Equipar", 11, UiKit.MUTED)
+			var tag2 := UiKit.label("Reserva · hacer principal", 11, UiKit.MUTED)
 			tag2.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
-			tag2.offset_left = -90
+			tag2.offset_left = -170
 			tag2.offset_right = -10
 			tag2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			b.add_child(tag2)
 			b.pressed.connect(equip_weapon.bind(i))
+			b.tooltip_text += "\nClic: hacerla arma principal"
 		_arsenal_box.add_child(b)
+	if card.weapons.size() > 1:
+		var hint := UiKit.wrap_label("Todas las armas van equipadas. En combate usa la principal; si se queda sin balas mientras le disparan, saca la de reserva en vez de recargar.", 11, UiKit.MUTED, 200.0)
+		hint.name = "ArsenalHint"
+		_arsenal_box.add_child(hint)
 	_add_weapon_upgrade_button()
 
 

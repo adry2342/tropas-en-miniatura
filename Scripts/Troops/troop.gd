@@ -47,6 +47,23 @@ var friendly_hits: int = 0   # balas desviadas que dieron a un compañero (fuego
 var ammo: int = 0
 var reloading: bool = false
 var reload_left: float = 0.0
+
+# --- v7.3: varias armas en combate ---
+# Todas las armas del arsenal van equipadas. La tropa usa la PRINCIPAL (card.equipped_weapon).
+# Si se le vacía el cargador BAJO FUEGO y otra arma tiene balas y alcanza al objetivo, cambia a esa en
+# vez de recargar. Cuando pasa el peligro (o la de reserva también se vacía) vuelve a la principal y la recarga.
+const WEAPON_SWAP_TIME := 0.35     # s sin disparar al cambiar de arma
+const UNDER_FIRE_WINDOW := 2.5     # s desde el último disparo recibido para estar "bajo fuego"
+const CALM_RETURN_TIME := 3.0      # s sin recibir disparos para volver a la principal
+const MIN_RELOAD_TO_CANCEL := 0.6  # si la recarga de la principal acaba en menos, no se interrumpe
+## Índice (en card.weapons) del arma que está usando ahora.
+var active_weapon: int = 0
+## Balas que quedan en cada arma (índice → balas). La activa se lleva en `ammo`.
+var weapon_ammo: Dictionary = {}
+var _weapon_stats: Dictionary = {}  # índice → TroopStats.compute(card, arma)
+var weapon_swaps: int = 0           # cambios de arma en este combate (estadísticas y pruebas)
+var since_hit: float = 999.0        # s desde el último disparo recibido
+var _calm_check_t: float = 0.0
 var statuses: Dictionary = {}   # "burn": {dps, left, tick}
 var buffs: Dictionary = {}      # clave -> {stat, value, left}
 var camo_left: float = 0.0      # >0 = camuflada: los enemigos no la eligen como objetivo
@@ -115,20 +132,155 @@ func setup(new_card: TroopCard) -> void:
 func refresh_from_card() -> void:
 	if card == null:
 		return
-	stats = TroopStats.compute(card)
+	_compute_weapon_stats()
 	_sprite_height = SPRITE_HEIGHT * (BOSS_SCALE if card.is_boss else 1.0)
 	if not is_battle_started:
+		active_weapon = primary_weapon_index()
+		stats = _stats_for(active_weapon)
 		health = get_max_health()
+		weapon_ammo.clear()
+		for i in _weapon_stats:
+			weapon_ammo[i] = int(_weapon_stats[i].magazine)
 		ammo = int(stats.magazine)
 		reloading = false
 		reload_left = 0.0
+		weapon_swaps = 0
+		since_hit = 999.0
 	else:
+		if not _weapon_stats.has(active_weapon):
+			active_weapon = primary_weapon_index()
+		stats = _stats_for(active_weapon)
+		ammo = mini(ammo, int(stats.magazine)) if int(stats.magazine) > 0 else 0
 		health = minf(health, get_max_health())
 	_apply_sprite()
 	_update_name_label()
 	update_health_bar()
 	_update_reload_bar()
 	update_visuals()
+
+
+## Estadísticas de cada arma del arsenal (todas equipadas).
+func _compute_weapon_stats() -> void:
+	_weapon_stats.clear()
+	if card.weapons.is_empty():
+		_weapon_stats[0] = TroopStats.compute(card)
+		return
+	for i in card.weapons.size():
+		if card.weapons[i] != null:
+			_weapon_stats[i] = TroopStats.compute(card, card.weapons[i])
+	if _weapon_stats.is_empty():
+		_weapon_stats[0] = TroopStats.compute(card)
+
+
+func _stats_for(i: int) -> Dictionary:
+	return _weapon_stats.get(i, _weapon_stats.values()[0])
+
+
+## Arma principal (la que el jugador marcó en el arsenal).
+func primary_weapon_index() -> int:
+	if card == null or card.weapons.is_empty():
+		return 0
+	var i := clampi(card.equipped_weapon, 0, card.weapons.size() - 1)
+	return i if _weapon_stats.has(i) else int(_weapon_stats.keys()[0])
+
+
+## Arma que está usando ahora mismo.
+func get_active_weapon() -> WeaponData:
+	return stats.get("weapon") as WeaponData
+
+
+## ¿Le están disparando? (le han dado o esquivado hace poco, o un enemigo le apunta y le alcanza)
+func is_under_fire() -> bool:
+	return since_hit <= UNDER_FIRE_WINDOW or _is_targeted()
+
+
+func _is_targeted() -> bool:
+	for t in get_tree().get_nodes_in_group("troops"):
+		if t == self or not is_instance_valid(t) or t.is_dead or t.team == team or t.get("target") != self:
+			continue
+		if t.global_position.distance_to(global_position) <= float(t.get_attack_range()) + 10.0:
+			return true
+	return false
+
+
+## Cambia a otra arma con balas que alcance al objetivo (la de más DPS). false si no hay ninguna.
+func try_swap_weapon() -> bool:
+	if _weapon_stats.size() < 2:
+		return false
+	var dist: float = global_position.distance_to(target.global_position) if _is_valid_target(target) else -1.0
+	var best := -1
+	var best_dps := -1.0
+	for i in _weapon_stats:
+		if i == active_weapon:
+			continue
+		var st: Dictionary = _weapon_stats[i]
+		if int(st.magazine) > 0 and int(weapon_ammo.get(i, 0)) <= 0:
+			continue
+		if dist >= 0.0 and (dist > float(st.attack_range) * (1.0 + get_buff_total("range_pct")) or dist < float(st.min_range)):
+			continue
+		if float(st.dps) > best_dps:
+			best_dps = float(st.dps)
+			best = i
+	if best < 0:
+		return false
+	set_active_weapon(best)
+	return true
+
+
+## Pone en la mano el arma `i` (guarda las balas de la anterior). Tarda WEAPON_SWAP_TIME en disparar.
+func set_active_weapon(i: int, announce: bool = true) -> void:
+	if not _weapon_stats.has(i) or i == active_weapon:
+		return
+	weapon_ammo[active_weapon] = ammo
+	active_weapon = i
+	stats = _weapon_stats[i]
+	ammo = int(weapon_ammo.get(i, int(stats.magazine)))
+	reloading = false
+	reload_left = 0.0
+	attack_cooldown = maxf(attack_cooldown, WEAPON_SWAP_TIME)
+	weapon_swaps += 1
+	if announce and is_inside_tree():
+		var w: WeaponData = stats.weapon
+		show_text("🔄 %s %s" % [EMOJI_FALLBACK.get(w.emoji, w.emoji), w.display_name], Color(0.75, 0.9, 1.0), 12, -12.0)
+	_update_name_label()
+	_update_reload_bar()
+
+
+## Cargador vacío: cambia de arma si le disparan y tiene otra con balas; si no, recarga
+## (si iba con la de reserva, vuelve antes a la principal para recargar esa).
+func _on_magazine_empty() -> void:
+	if _weapon_stats.size() > 1 and is_under_fire() and try_swap_weapon():
+		return
+	var prim := primary_weapon_index()
+	if active_weapon != prim:
+		set_active_weapon(prim)
+		if int(stats.magazine) <= 0 or ammo > 0:
+			return
+	_start_reload()
+
+
+## Pasado el peligro, vuelve a la principal (y la recarga si está vacía).
+func _tick_weapon_return(delta: float) -> void:
+	since_hit += delta
+	if active_weapon == primary_weapon_index() or reloading:
+		return
+	_calm_check_t -= delta
+	if _calm_check_t > 0.0:
+		return
+	_calm_check_t = 0.5
+	if since_hit > CALM_RETURN_TIME and not _is_targeted():
+		set_active_weapon(primary_weapon_index())
+		if int(stats.magazine) > 0 and ammo <= 0:
+			_start_reload()
+
+
+## Le disparan mientras recarga la principal: si otra arma tiene balas, la saca en vez de esperar.
+func _on_shot_at() -> void:
+	since_hit = 0.0
+	if not is_battle_started or is_dead or not reloading or reload_left < MIN_RELOAD_TO_CANCEL:
+		return
+	if ammo <= 0 and try_swap_weapon():
+		reloads = maxi(0, reloads - 1) # la recarga no llegó a hacerse
 
 
 ## Alias de compatibilidad (SPEC 8).
@@ -298,7 +450,9 @@ func _update_name_label() -> void:
 	var label: Label = get_node_or_null("NameLabel")
 	if not label or not card:
 		return
-	var w: WeaponData = card.get_weapon()
+	var w: WeaponData = stats.get("weapon") as WeaponData if not stats.is_empty() else card.get_weapon()
+	if w == null:
+		w = card.get_weapon()
 	var emoji: String = w.emoji if w else ""
 	emoji = EMOJI_FALLBACK.get(emoji, emoji)
 	var nombre: String = ("☠ " + card.unit_name) if card.is_boss else card.unit_name
@@ -495,7 +649,9 @@ func _physics_process(delta: float) -> void:
 		if reload_left <= 0.0:
 			reloading = false
 			ammo = int(stats.magazine)
+			weapon_ammo[active_weapon] = ammo
 		_update_reload_bar()
+	_tick_weapon_return(delta)
 	if attack_cooldown > 0.0:
 		attack_cooldown -= delta
 	if not ai_enabled:
@@ -773,7 +929,7 @@ func attack() -> void:
 	if not _is_valid_target(target) or reloading:
 		return
 	if int(stats.magazine) > 0 and ammo <= 0:
-		_start_reload()
+		_on_magazine_empty()
 		return
 	var bonus: Dictionary = effects.on_before_shot() if effects else {}
 	var w: WeaponData = stats.weapon
@@ -817,12 +973,13 @@ func attack() -> void:
 		_show_miss()
 	if w.projectile == WeaponData.Projectile.LLAMA:
 		_fire_cosmetic_flame(dist)
+	attack_cooldown = 1.0 / maxf(0.05, get_fire_rate())
 	if int(stats.magazine) > 0:
 		ammo -= 1
+		weapon_ammo[active_weapon] = ammo
 		if ammo <= 0:
-			_start_reload()
+			_on_magazine_empty()
 		_update_reload_bar()
-	attack_cooldown = 1.0 / maxf(0.05, get_fire_rate())
 
 
 func _hit_info(dmg: float, crit: bool, w: WeaponData, lethal: bool = false) -> Dictionary:
@@ -943,6 +1100,7 @@ func on_hit_landed(victim: Node, info: Dictionary, killed: bool) -> void:
 func receive_hit(info: Dictionary) -> bool:
 	if is_dead:
 		return false
+	_on_shot_at()
 	# Impacto letal: no se puede esquivar. Mata al instante salvo a los jefes, que reciben ×3.
 	if info.get("lethal", false):
 		var boss: bool = card != null and card.is_boss

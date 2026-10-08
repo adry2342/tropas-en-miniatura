@@ -4,7 +4,7 @@ extends Control
 ## Cada objeto es un CCHotspot (clic/toque solo sobre su silueta, brillo al pasar el ratón):
 ##   🗺 Mesa táctica → nueva run · 🧊 Tubos criogénicos → veteranos (ficha) · 🗄 Archivo → Códice
 ##   🖥 Terminal → árbol de especialidades · 🚪 Hangar → modo nuevo (bloqueado hasta 5 veteranos)
-##   📻 Radio → Configuración · ← Menú principal
+##   📻 Radio → Configuración · 🚪 cartel de SALIDA → Menú principal
 ## v7.1: sin rótulos superpuestos (el arte ya lleva sus letreros); la información va en tooltips y avisos.
 ## Empezar una run o entrar al Modo Infinito pide confirmación.
 
@@ -35,6 +35,7 @@ const TUBE_POSITIONS: Array[Vector2] = [Vector2(12, 87), Vector2(152, 87), Vecto
 const TUBE_SIZE := Vector2(212, 458)
 const TUBE_SLOT := Rect2(58, 175, 100, 180)
 const TUBE_GLOW := Color("5cf2ff")
+const EXIT_SIGN_POS := Vector2(14, 6)
 
 var change_scene_enabled: bool = true # los tests lo desactivan
 var room: Control
@@ -45,8 +46,7 @@ var detail_panel: CanvasLayer
 var codex: CodexPanel = null
 var settings: SettingsPanel = null
 var tree_panel: SpecialtyTreePanel = null
-var back_button: Button
-var _hud_label: Label
+var back_button: Control
 var _toast: Label
 var _confirm_layer: Control
 var _confirm_title: Label
@@ -122,28 +122,16 @@ func _build() -> void:
 		else:
 			_build_object(it.key, it.tex)
 
-	# HUD fijo a la pantalla (no se escala con la sala)
-	_hud_label = UiKit.label("", 18, UiKit.GOLD)
-	_hud_label.name = "HudLabel"
-	_hud_label.add_theme_constant_override("outline_size", 6)
-	_hud_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
-	_hud_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_hud_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	_hud_label.offset_left = -420
-	_hud_label.offset_right = -16
-	_hud_label.offset_top = 10
-	_hud_label.offset_bottom = 40
-	add_child(_hud_label)
-
-	back_button = Button.new()
-	back_button.name = "BackButton"
-	back_button.text = "←  Menú principal"
-	back_button.custom_minimum_size = Vector2(190, 44)
-	back_button.position = Vector2(12, 10)
-	back_button.add_theme_font_size_override("font_size", 16)
-	UiKit.style_button(back_button, Color(0.1, 0.11, 0.14, 0.85), UiKit.BORDER, UiKit.TEXT, 8)
-	back_button.pressed.connect(go_main_menu)
-	add_child(back_button)
+	# Cartel de SALIDA colgado en la pared: vuelve al menú principal
+	var exit_sign := CCHotspot.new()
+	exit_sign.name = "ExitSign"
+	exit_sign.setup(load(ART + "exit_sign.png"), Color("5cff9a"))
+	exit_sign.position = EXIT_SIGN_POS
+	exit_sign.tooltip_text = "Salida · volver al menú principal"
+	exit_sign.activated.connect(go_main_menu)
+	room.add_child(exit_sign)
+	back_button = exit_sign
+	hotspots["exit_sign"] = exit_sign
 
 	_toast = UiKit.label("", 20, UiKit.GOLD)
 	_toast.name = "Toast"
@@ -234,9 +222,6 @@ func refresh() -> void:
 	if door:
 		door.tooltip_text = ("Hangar · %s" % NEW_MODE_NAME) if unlocked \
 				else "Hangar bloqueado · %s: reúne %d veteranos (%d/%d)" % [NEW_MODE_NAME, size_v, n_vault, size_v]
-	var medals: int = int(pm.get("medals")) if pm and "medals" in pm else 0
-	var wins: int = pm.final_boss_wins if pm else 0
-	_hud_label.text = "🏅 %d Medallas   ·   ☠ %d Jefes Finales" % [medals, wins]
 	# Especialidades con el hito conseguido: el terminal late hasta que se desbloquean
 	var ready: Array = pm.claimable_specialties() if pm and pm.has_method("claimable_specialties") else []
 	var term: CCHotspot = hotspots.get("specialty_terminal")

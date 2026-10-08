@@ -1,19 +1,15 @@
-[gd_resource type="Resource" script_class="SpecialtyData" format=3]
+[gd_resource type="Resource" script_class="SpecialtyData" format=3 uid="uid://d13tfifkl43p5"]
 
-[ext_resource type="Script" path="res://Scripts/Resources/specialty_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://x4dso33noqg0" path="res://Scripts/Resources/specialty_data.gd" id="1_script"]
 
 [resource]
 script = ExtResource("1_script")
 id = "infiltrado"
 display_name = "Infiltrado"
+description = "Se cuela en las líneas enemigas: al empezar la ronda aparece a la espalda del enemigo. Afín a cuchillos y pistolas."
 emoji = "🗡️"
 color = Color(0.72, 0.5, 0.95, 1)
 affine_families = Array[int]([6, 0])
-description = "Se cuela en las líneas enemigas: al empezar la ronda aparece a la espalda del enemigo. Afín a cuchillos y pistolas."
 passive_name = "Tras las líneas"
 passive_description = "Mecánica pendiente de diseñar (aún no tiene efecto en combate)."
-passive_effect_id = ""
-passive_params = {}
-modifiers = {}
-extra_effects = {}
 synergy_text = "Pendiente: sinergias con quien atrae la atención del enemigo por delante."

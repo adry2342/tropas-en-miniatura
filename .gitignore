@@ -24,3 +24,7 @@ _release/
 _dev/release/job.json
 _dev/release/result.json
 _dev/release/*.log
+
+# Arte intermedio y copias de seguridad locales
+_dev/art_tmp/
+_dev/backup_cryo/

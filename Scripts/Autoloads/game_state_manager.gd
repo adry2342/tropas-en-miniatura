@@ -21,6 +21,8 @@ var rolled_round: int = 0              # Ronda para la que ya se giró la ruleta
 var last_roll_was_boss: bool = false
 ## Jefes de Sector derrotados en esta run (para las Medallas de mando al terminar).
 var subbosses_defeated: int = 0
+## Medallas de mando ganadas en esta run (se suman al perfil en cuanto cae cada jefe).
+var run_medals: int = 0
 var coins: int = 0
 var command_points: int = 0
 ## Alias de compatibilidad: el código nuevo usa `coins`.
@@ -208,6 +210,13 @@ func apply_victory_rewards(node_type: String) -> Dictionary:
 	var clean := round_player_losses == 0
 	if node_type == SUBBOSS_TYPE:
 		subbosses_defeated += 1
+	# Medallas de mando: al momento, por jefe derrotado
+	var medals := SpecialtyProgression.medals_for_boss(node_type, subboss_tier(current_stage))
+	if medals > 0:
+		run_medals += medals
+		var pm := get_node_or_null("/root/ProfileManager")
+		if pm:
+			pm.add_medals(medals, node_type)
 	var win_coins := Economy.WIN_BONUS_COINS
 	add_coins(win_coins, "victoria")
 	var interest := Economy.interest_for(coins)
@@ -221,6 +230,7 @@ func apply_victory_rewards(node_type: String) -> Dictionary:
 		"interest": interest,
 		"points": points,
 		"clean": clean,
+		"medals": medals,
 		"coins_total": coins,
 		"points_total": command_points,
 	}
@@ -388,6 +398,7 @@ func reset_run() -> void:
 	rolled_round = 0
 	last_roll_was_boss = false
 	subbosses_defeated = 0
+	run_medals = 0
 	coins = 0
 	command_points = 0
 	shop_offers.clear()

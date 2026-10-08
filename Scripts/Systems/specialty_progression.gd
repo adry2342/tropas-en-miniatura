@@ -25,10 +25,13 @@ const MAX_RANK := 4
 const DEFAULT_COSTS: Array[int] = [3, 5, 8, 12]
 const PENDING_TEXT := "Mejora pendiente de definir"
 
-## Medallas de mando al terminar una run (ganes o pierdas).
-const MEDALS_ROUNDS_PER_MEDAL := 5   # 1 medalla por cada 5 rondas ganadas
-const MEDALS_PER_SUBBOSS := 2        # por cada Jefe de Sector derrotado
-const MEDALS_FINAL_BOSS := 5         # por derrotar al Jefe Final
+## Medallas de mando: se ganan AL MOMENTO al derrotar a un jefe (no al terminar la run).
+##   Jefe de Sector N (ronda 10·N): MEDALS_SUBBOSS_BASE + MEDALS_SUBBOSS_PER_TIER·(N−1)  → 3, 4, 5, 6…
+##   Jefe Final: MEDALS_FINAL_BOSS
+## Valores PROVISIONALES: se equilibran aquí.
+const MEDALS_SUBBOSS_BASE := 3
+const MEDALS_SUBBOSS_PER_TIER := 1
+const MEDALS_FINAL_BOSS := 8
 
 const DEFAULT_TREES := {
 	"soldado": [
@@ -206,11 +209,21 @@ static func _profile() -> Node:
 	return (loop as SceneTree).root.get_node_or_null("/root/ProfileManager")
 
 
-## Medallas de mando que da una run: 1 por cada 5 rondas ganadas, 2 por Jefe de Sector y 5 por el Jefe Final.
-static func medals_for_run(rounds_won: int, subbosses_defeated: int, final_boss_defeated: bool) -> int:
-	@warning_ignore("integer_division")
-	return maxi(0, rounds_won) / MEDALS_ROUNDS_PER_MEDAL + MEDALS_PER_SUBBOSS * maxi(0, subbosses_defeated) \
-			+ (MEDALS_FINAL_BOSS if final_boss_defeated else 0)
+## Medallas que da derrotar a un jefe. `node_type` = "Jefe de Sector" / "Jefe Final"; `tier` = N.º de sector (1, 2…).
+## Cualquier otra ronda → 0.
+static func medals_for_boss(node_type: String, tier: int = 1) -> int:
+	match node_type:
+		"Jefe de Sector":
+			return MEDALS_SUBBOSS_BASE + MEDALS_SUBBOSS_PER_TIER * maxi(0, tier - 1)
+		"Jefe Final":
+			return MEDALS_FINAL_BOSS
+	return 0
+
+
+## Texto corto de cómo se ganan las medallas (tooltips y paneles).
+static func medals_hint() -> String:
+	return "Se ganan al derrotar jefes: Jefe de Sector %d (+%d por sector) · Jefe Final %d." % [
+		MEDALS_SUBBOSS_BASE, MEDALS_SUBBOSS_PER_TIER, MEDALS_FINAL_BOSS]
 
 
 ## Rango actual de una especialidad según el perfil (autoload ProfileManager). Sin perfil → 0.

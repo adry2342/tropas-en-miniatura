@@ -25,7 +25,8 @@ static var _fallback_weapon: WeaponData = null
 
 
 ## Suma los modificadores de especialidad (+ sus mejoras del perfil, solo tropas del jugador) + habilidades + objetos.
-static func collect_modifiers(card: TroopCard) -> Dictionary:
+## `weapon`: arma para la que se calculan las mejoras de arma (null = la principal del card).
+static func collect_modifiers(card: TroopCard, weapon: WeaponData = null) -> Dictionary:
 	var total := {}
 	var sources: Array = []
 	if card.specialty:
@@ -41,7 +42,7 @@ static func collect_modifiers(card: TroopCard) -> Dictionary:
 		if it:
 			sources.append(it.modifiers)
 	# Mejoras del arma equipada (PM): suaves y según la familia
-	var ew: WeaponData = card.get_weapon()
+	var ew: WeaponData = weapon if weapon != null else card.get_weapon()
 	if ew:
 		sources.append(Economy.weapon_upgrade_mods(ew, card.get_weapon_level(ew) - 1))
 	for mods in sources:
@@ -56,14 +57,16 @@ static func has_affinity(card: TroopCard, weapon: WeaponData = null) -> bool:
 	return card.specialty != null and card.specialty.is_affine(weapon)
 
 
-static func compute(card: TroopCard) -> Dictionary:
-	var w: WeaponData = card.get_weapon()
+## Estadísticas finales con el arma `weapon` (null = la principal, card.get_weapon()).
+## En combate cada arma del arsenal tiene las suyas (la tropa cambia de arma si se queda sin balas).
+static func compute(card: TroopCard, weapon: WeaponData = null) -> Dictionary:
+	var w: WeaponData = weapon if weapon != null else card.get_weapon()
 	if w == null:
 		if _fallback_weapon == null:
 			_fallback_weapon = WeaponData.new()
 			_fallback_weapon.display_name = "Puños"
 		w = _fallback_weapon
-	var m := collect_modifiers(card)
+	var m := collect_modifiers(card, null if w == _fallback_weapon else w)
 	var affinity := has_affinity(card, w)
 	var lv: int = maxi(card.level, 1) - 1
 	var training: float = 1.0 + Economy.TRAINING_BONUS * card.training_ranks

@@ -2,7 +2,7 @@ extends CanvasLayer
 ## Fin de la run. Derrota: reiniciar / Cuartel / menú.
 ## Victoria (Jefe Final): antes de salir eliges UNA de tus tropas (tablero + reserva, máx. 6) para guardarla
 ## en el Cuartel (ProfileManager). Con la bóveda llena, eliges a qué veterano sustituye, o no guardas ninguna.
-## Siempre: se ganan Medallas de mando (🏅, SpecialtyProgression.medals_for_run) UNA vez y se muestran bajo el título.
+## Siempre: se muestran las Medallas de mando (🏅) ganadas en la run (se ganan al derrotar cada jefe).
 
 @export_file("*.tscn") var main_menu_scene_path: String = "res://Scenes/UI/main_menu.tscn"
 const HUB_SCENE := "res://Scenes/UI/command_center.tscn" # v7: el Centro de mando sustituye al Cuartel
@@ -82,19 +82,14 @@ func setup(is_victory: bool) -> void:
 	_update_nav()
 
 
-## Calcula y concede las Medallas de mando de la run (una sola vez aunque se llame dos veces a setup).
-func _award_medals(is_victory: bool, gsm) -> void:
+## Muestra las Medallas de mando ganadas en la run. Ya se sumaron al perfil al caer cada jefe
+## (GameStateManager.apply_victory_rewards); aquí solo se resumen.
+func _award_medals(_is_victory: bool, gsm) -> void:
 	if _medals_given:
 		return
 	_medals_given = true
-	var stage: int = gsm.current_stage if gsm else 1
-	# Rondas ganadas: las anteriores a la actual; en victoria también la del Jefe Final.
-	var rounds_won: int = maxi(0, stage - 1) + (1 if is_victory else 0)
-	var subs: int = int(gsm.subbosses_defeated) if gsm else 0
-	medals_awarded = SpecialtyProgression.medals_for_run(rounds_won, subs, is_victory)
+	medals_awarded = int(gsm.run_medals) if gsm and "run_medals" in gsm else 0
 	var pm := _pm()
-	if pm:
-		pm.add_medals(medals_awarded, "fin de partida")
 	medals_label = UiKit.label("", 18, UiKit.GOLD)
 	medals_label.name = "MedalsLabel"
 	medals_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -102,9 +97,8 @@ func _award_medals(is_victory: bool, gsm) -> void:
 	medals_label.add_theme_constant_override("outline_size", 4)
 	medals_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	var total: int = int(pm.medals) if pm else medals_awarded
-	medals_label.text = "🏅 +%d Medallas de mando (total %d)" % [medals_awarded, total]
-	medals_label.tooltip_text = "1 por cada %d rondas ganadas · %d por Jefe de Sector · %d por el Jefe Final.\nSe gastan en el árbol de Especialidades." % [
-		SpecialtyProgression.MEDALS_ROUNDS_PER_MEDAL, SpecialtyProgression.MEDALS_PER_SUBBOSS, SpecialtyProgression.MEDALS_FINAL_BOSS]
+	medals_label.text = "🏅 +%d Medallas de mando en esta partida (total %d)" % [medals_awarded, total]
+	medals_label.tooltip_text = SpecialtyProgression.medals_hint() + "\nSe gastan en el árbol de Especialidades."
 
 
 func _place_medals_label() -> void:

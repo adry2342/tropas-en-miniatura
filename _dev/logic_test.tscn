@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://ctm4do4vfp1a0"]
+[gd_scene format=3 uid="uid://c2i81p8kquxff"]
 
-[ext_resource type="Script" uid="uid://qorsrvohj1lu" path="res://_dev/logic_test.gd" id="1_6ak0m"]
+[ext_resource type="Script" path="res://_dev/logic_test.gd" id="1_6ak0m"]
 
 [node name="LogicTest" type="Node2D" unique_id=344883814]
 script = ExtResource("1_6ak0m")

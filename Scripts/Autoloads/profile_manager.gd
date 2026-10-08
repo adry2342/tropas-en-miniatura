@@ -5,7 +5,7 @@ extends Node
 ##  - Con la bóveda completa se desbloquea el modo de juego nuevo (aún sin implementar).
 ## Las tropas se guardan por ids de contenido (GameContent), no por rutas: sobreviven a cambios de carpetas.
 ##  - Medallas de mando (🏅) y rangos de especialidad (SpecialtyProgression): meta-progresión entre runs.
-##    Las medallas se ganan al terminar cada run (game_over_panel) y se gastan en el árbol de cada especialidad.
+##    Las medallas se ganan al derrotar cada jefe (GameStateManager.apply_victory_rewards) y se gastan en el árbol de cada especialidad.
 
 signal vault_changed
 ## Cambian las medallas o algún rango de especialidad.
