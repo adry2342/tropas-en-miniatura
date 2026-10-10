@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "senuelo"
+display_name = "Señuelo"
+description = "Al empezar el combate planta un muñeco con su aspecto delante de él. Los enemigos pueden confundirlo con un soldado y dispararle; aguanta 6 impactos."
+emoji = "🎭"
+rarity = 1
+category = 3
+player_only = true
+effect_id = "senuelo"
+params = {"hits": 6.0}

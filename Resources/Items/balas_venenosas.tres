@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://dvmq6bni2mig4" path="res://Scripts/Resources/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://ctu61wp484awh" path="res://Assets/Items/Ammo/balas_venenosas.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+id = "balas_venenosas"
+display_name = "Balas venenosas"
+description = "−35 de daño directo y +60 de veneno: por cada 100 de daño de un impacto, el blanco recibe 60 más de veneno en 3 s (cada impacto reinicia la cuenta). El veneno ignora la armadura y el envenenado se cura la mitad. Mejor contra jefes y blancos duros. Solo armas de bala."
+emoji = "🧪"
+rarity = 1
+icon = ExtResource("2_icon")
+slot = 0
+modifiers = {
+"damage": -35.0,
+"poison": 60.0
+}

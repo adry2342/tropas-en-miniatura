@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "todo_al_rojo"
+display_name = "Todo al rojo"
+description = "Cada disparo que acierta seguido suma +6 de daño al siguiente, sin límite, durante todo el combate. Un solo fallo y pierde toda la racha."
+emoji = "🔥"
+rarity = 1
+category = 0
+effect_id = "todo_al_rojo"
+params = {"per_hit": 6.0}

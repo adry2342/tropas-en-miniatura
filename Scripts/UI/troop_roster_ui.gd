@@ -125,7 +125,7 @@ func _refresh() -> void:
 	for node in get_tree().get_nodes_in_group("troops"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
-		if node.team != node.Team.PLAYER or node.has_meta("is_drag_preview"):
+		if node.team != node.Team.PLAYER or node.has_meta("is_drag_preview") or node.has_meta("summon"):
 			continue
 		_cards.add_child(_make_deployed_card(node))
 		deployed += 1
@@ -199,8 +199,8 @@ func _make_troop_card(c: TroopCard, texture: Texture2D, deployed: bool) -> Butto
 	UiKit.style_button(btn, Color(0.13, 0.145, 0.185), border, UiKit.TEXT, 8, 4)
 	var w: WeaponData = c.get_weapon() if c else null
 	if c:
-		btn.tooltip_text = "%s · Nv. %d\n%s\nObjetos %d/%d · Habilidades %d" % [c.get_title(), c.level,
-				w.display_name if w else "Sin arma", c.items.size(), TroopCard.MAX_ITEM_SLOTS, c.skills.size()]
+		btn.tooltip_text = "%s · Nv. %d\n%s · %s\nObjetos %d/%d · Habilidades %d" % [c.get_title(), c.level,
+				w.display_name if w else "Sin arma", c.get_ammo_name(), c.items.size(), TroopCard.MAX_ITEM_SLOTS, c.skills.size()]
 
 	var vbox := VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -414,10 +414,12 @@ func _drop_resource() -> void:
 			if target_card is TroopCard and gsm.equip_item_from_bench(target_card, res):
 				print("Objeto equipado a ", target_card.unit_name)
 			elif target_card is TroopCard:
-				if target_card.items.size() >= TroopCard.MAX_ITEM_SLOTS:
+				if target_card.is_ammo(res):
+					_show_toast("%s ya lleva %s." % [target_card.unit_name, res.display_name])
+				elif target_card.items.size() >= TroopCard.MAX_ITEM_SLOTS:
 					_show_toast("%s ya tiene los %d huecos ocupados." % [target_card.unit_name, TroopCard.MAX_ITEM_SLOTS])
 				else:
-					_show_toast("%s no puede llevar %s (solo 1 de munición y 1 de armadura, sin repetir)." % [target_card.unit_name, res.display_name])
+					_show_toast("%s no puede llevar %s (solo 1 de armadura, sin repetir)." % [target_card.unit_name, res.display_name])
 
 
 func _show_toast(text: String) -> void:

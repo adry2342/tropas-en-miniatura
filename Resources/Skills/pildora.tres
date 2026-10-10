@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "pildora"
+display_name = "Píldora roja"
+description = "Al empezar el combate se toma una píldora: 6 s con +45 de movilidad y +30 de evasión, pero queda envenenado 10 s y pierde el 30 % de su vida máxima (el veneno nunca le mata)."
+emoji = "💊"
+rarity = 1
+category = 3
+effect_id = "pildora"
+params = {"duration": 6.0, "speed": 45.0, "dodge": 30.0, "poison_time": 10.0, "poison_pct": 0.3}

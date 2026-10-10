@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 id = "mira_laser"
 display_name = "Mira láser"
-description = "+10 % de crítico y +10 % de precisión."
+description = "+15 de precisión."
 emoji = "🔴"
 rarity = 1
-modifiers = {"crit_chance": 0.1, "accuracy": 0.1}
+modifiers = {"accuracy": 15.0}

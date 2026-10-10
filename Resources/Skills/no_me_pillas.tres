@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "no_me_pillas"
+display_name = "No me pillas dos veces"
+description = "Cada vez que un enemigo le acierta, gana +5 de evasión solo contra ese enemigo durante el combate (máx. +30)."
+emoji = "🙅"
+rarity = 1
+category = 2
+effect_id = "no_me_pillas"
+params = {"per_hit": 5.0, "cap": 30.0}

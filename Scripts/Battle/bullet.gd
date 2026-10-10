@@ -18,7 +18,7 @@ var kind: int = WeaponData.Projectile.BALA
 var family: int = WeaponData.Family.PISTOLA
 var speed: float = 650.0
 var shooter_team: int = 0
-var info: Dictionary = {}          # {damage, crit, headshot, burn_dps, burn_duration, attacker}
+var info: Dictionary = {}          # {damage, lethal, poison_pct, poison_duration, suppress, attacker, ...}
 var target: Node2D = null          # objetivo (solo si acierta)
 var target_pos: Vector2 = Vector2.ZERO
 var is_miss: bool = false
@@ -137,8 +137,6 @@ func _process_bullet(delta: float) -> void:
 				continue
 			_already_hit.append(e)
 			var extra := info.duplicate()
-			extra["crit"] = false
-			extra["headshot"] = false
 			extra["lethal"] = false
 			extra["pierced"] = true
 			CombatFX.apply_hit(e, extra)
@@ -168,8 +166,6 @@ func _try_stray_hit() -> bool:
 		return false
 	_hit_done = true
 	var stray := info.duplicate()
-	stray["crit"] = false
-	stray["headshot"] = false
 	stray["lethal"] = false
 	stray["stray"] = true
 	if victim.team == shooter_team:
@@ -197,7 +193,7 @@ func _explode(pos: Vector2) -> void:
 		return
 	_finished = true
 	var radius := maxf(aoe_radius, 20.0)
-	CombatFX.explosion(get_parent(), pos, radius)
+	SkillFX.blast(get_parent(), pos, radius, String(info.get("blast", "fire")))
 	# El impacto letal solo afecta al objetivo principal de la explosión, no a todo el radio.
 	# v4: la onda pierde fuerza hacia el borde (EXPLOSION_EDGE en el límite del radio), así un
 	# cohete no borra a todo un grupo de golpe.
@@ -238,6 +234,18 @@ func _draw() -> void:
 			draw_rect(Rect2(-10, -3.5, 16, 7), Color(0.42, 0.45, 0.38))
 			draw_colored_polygon(PackedVector2Array([Vector2(6, -3.5), Vector2(12, 0), Vector2(6, 3.5)]), Color(0.85, 0.2, 0.15))
 		_:
+			if info.get("golden", false):
+				# Gatillo del destino / Ruleta rusa: bala dorada con estela
+				draw_line(Vector2(-30, 0), Vector2(4, 0), Color(1.0, 0.8, 0.2, 0.35 * fade), 6.0)
+				draw_line(Vector2(-22, 0), Vector2(4, 0), Color(1.0, 0.92, 0.45, fade), 3.0)
+				return
+			if info.get("tracer", false):
+				draw_line(Vector2(-26, 0), Vector2(3, 0), Color(1.0, 0.3, 0.2, 0.4 * fade), 5.0)
+				draw_line(Vector2(-20, 0), Vector2(3, 0), Color(1.0, 0.55, 0.4, fade), 2.5)
+				return
+			if info.get("ricochet", false):
+				draw_line(Vector2(-12, 0), Vector2(2, 0), Color(1.0, 1.0, 0.75, fade), 2.0)
+				return
 			match family:
 				WeaponData.Family.PRECISION:
 					draw_line(Vector2(-22, 0), Vector2(4, 0), Color(0.7, 0.95, 1.0, 0.35 * fade), 4.0)

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "carne_canon"
+display_name = "Carne de cañón"
+description = "Al empezar el combate se une al aliado con menos vida máxima. Mientras los dos sigan en pie, recibe el 30 % del daño que iba a recibir su protegido."
+emoji = "🛡️"
+rarity = 1
+category = 1
+effect_id = "carne_canon"
+params = {"share": 0.3}

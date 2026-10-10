@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "efecto_mariposa"
+display_name = "Efecto mariposa"
+description = "Tras la primera baja del combate (de cualquier bando), cada aliado recibe algo al azar: nada, +30 de vida, +25 % de balas en el cargador, 2 s de invisibilidad o 4 s con +40 de movilidad y +40 de evasión."
+emoji = "🦋"
+rarity = 2
+category = 3
+effect_id = "efecto_mariposa"
+params = {"health": 30.0, "ammo_pct": 0.25, "invis": 2.0, "rush": 4.0, "rush_value": 40.0}

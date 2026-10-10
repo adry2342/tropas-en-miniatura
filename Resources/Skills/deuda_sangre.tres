@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "deuda_sangre"
+display_name = "Deuda de sangre"
+description = "Si un enemigo mata a un aliado, queda en deuda. Cuando ese enemigo muere, se levanta de tu lado y pelea 10 s a puñetazos contra sus antiguos compañeros. Mientras este soldado siga vivo, el resucitado no puede caer."
+emoji = "🩸"
+rarity = 3
+category = 0
+player_only = true
+effect_id = "deuda_sangre"
+params = {"duration": 10.0, "punch_damage": 6.0, "punch_rate": 1.2, "hp_pct": 0.5}

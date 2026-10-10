@@ -415,6 +415,10 @@ func _on_troop_died(_troop: Node) -> void:
 	if is_battle_over:
 		return
 
+	# Señuelos y resucitados (habilidades) no son bajas de nadie ni dan recompensa
+	if is_instance_valid(_troop) and _troop.has_meta("summon"):
+		call_deferred("_check_battle_status")
+		return
 	# Registrar bajas y emitir eventos si la batalla ha empezado
 	if is_battle_started and is_instance_valid(_troop):
 		var troop = _troop
@@ -444,6 +448,8 @@ func _check_battle_status() -> void:
 	for troop in get_tree().get_nodes_in_group("troops"):
 		if not is_instance_valid(troop) or troop.is_queued_for_deletion():
 			continue
+		if troop.has_meta("summon"):
+			continue # señuelos y resucitados no deciden el combate
 		
 		if troop.team == troop.Team.PLAYER:
 			player_count += 1
@@ -466,7 +472,7 @@ func _save_active_player_troops() -> void:
 	
 	var active_player_troops: Array = []
 	for troop in get_tree().get_nodes_in_group("troops"):
-		if is_instance_valid(troop) and not troop.is_queued_for_deletion() and troop.team == troop.Team.PLAYER and not troop.has_meta("is_drag_preview"):
+		if is_instance_valid(troop) and not troop.is_queued_for_deletion() and troop.team == troop.Team.PLAYER and not troop.has_meta("is_drag_preview") and not troop.has_meta("summon"):
 			active_player_troops.append(troop)
 	
 	gsm.save_deployed_troops(active_player_troops)

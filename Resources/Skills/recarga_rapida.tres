@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 id = "recarga_rapida"
 display_name = "Recarga rápida"
-description = "Recarga un 25 % más rápido."
+description = "−0,5 s de recarga."
 emoji = "🔄"
 rarity = 0
-modifiers = {"reload_pct": -0.25}
+modifiers = {"reload": -0.5}

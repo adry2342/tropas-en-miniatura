@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/item_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "granada_gas"
+display_name = "Granada de gas"
+description = "Cada 8 s, si hay un enemigo a media distancia, le lanza una granada de gas: 6 de daño en radio 75 y envenena a todos con 36 de daño en 4 s (ignora la armadura; el envenenado se cura la mitad)."
+emoji = "🤢"
+rarity = 1
+slot = 2
+effect_id = "granada_gas"
+params = {"cooldown": 8.0, "damage": 6.0, "radius": 75.0, "poison": 36.0, "poison_time": 4.0}

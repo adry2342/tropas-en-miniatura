@@ -18,8 +18,9 @@ const MINE_SCRIPT := preload("res://Scripts/Battle/mine.gd")
 const MINE_SPACING := 44.0
 const ARTILLERY_CLUSTER_RADIUS := 90.0
 const ARTILLERY_SPREAD := 34.0
-const SUPPRESS_TEXT_CD := 2.0
 const ANTI_ARMOR_BOSS_MULT := 1.3
+## Granadas (objetos): effect_id -> aspecto de la explosión ("fire" normal, "flash" cegadora, "gas").
+const GRENADE_KINDS := {"granada": "fire", "granada_cegadora": "flash", "granada_gas": "gas"}
 
 var troop: Node = null
 var active: Dictionary = {}       # effect_id -> params (fusionados)
@@ -40,11 +41,15 @@ var heal_done: float = 0.0        # total curado por esta tropa (a sí misma o a
 var _timers: Dictionary = {}
 var _regen_shown: float = 0.0
 var _regen_text_t: float = 0.0
+## Habilidades generales con mecánica propia (Scripts/Systems/skill_effects.gd).
+var sk: SkillEffects = null
+
 
 
 func _init(t: Node) -> void:
 	troop = t
 	active = collect(t.card if t else null)
+	sk = SkillEffects.new(self, t)
 
 
 ## Reúne los efectos de la especialidad, habilidades y objetos con sus parámetros.
@@ -119,11 +124,12 @@ func on_fight_start() -> void:
 		troop.camo_left = p("camuflaje", "duration", 3.0)
 	if has("adrenalina"):
 		var dur := p("adrenalina", "duration", 5.0)
-		troop.add_buff("adrenalina", "fire_rate_pct", p("adrenalina", "fire_rate_pct", 0.4), dur)
-		troop.add_buff("adrenalina_mov", "move_speed_pct", p("adrenalina", "move_speed_pct", 0.3), dur)
+		troop.add_buff("adrenalina", "fire_rate", p("adrenalina", "fire_rate", 40.0), dur)
+		troop.add_buff("adrenalina_mov", "move_speed", p("adrenalina", "move_speed", 27.0), dur)
 		troop.show_text("💉 ¡Adrenalina!", Color(1.0, 0.45, 0.3), 12, -6.0)
-	if has("granada"):
-		_timers["granada"] = p("granada", "cooldown", 6.0) * (1.0 - GRENADE_FIRST_DELAY)
+	for gk in GRENADE_KINDS:
+		if has(gk):
+			_timers[gk] = p(gk, "cooldown", 6.0) * (1.0 - GRENADE_FIRST_DELAY)
 	if has("primeros_auxilios"):
 		_timers["primeros_auxilios"] = 0.0
 	if has("oficial"):
@@ -135,6 +141,7 @@ func on_fight_start() -> void:
 		_timers["artillery"] = 0.0
 	if has("minas"):
 		_place_mines()
+	sk.on_fight_start()
 	troop.update_visuals()
 
 
@@ -153,14 +160,15 @@ func on_process(delta: float) -> void:
 			var r := p("oficial", "radius", 180.0)
 			for a in _allies(false):
 				if a.global_position.distance_to(troop.global_position) <= r:
-					a.add_buff("oficial", "fire_rate_pct", p("oficial", "fire_rate_pct", 0.15), OFFICER_TICK * 2.0)
-	if has("granada"):
-		_timers["granada"] += delta
-		# Sinergia: un Zapador lanza las granadas un 30 % más a menudo
-		var gcd := p("granada", "cooldown", 6.0) * (0.7 if has("minas") else 1.0)
-		if _timers["granada"] >= gcd:
-			if _throw_grenade():
-				_timers["granada"] = 0.0
+					a.add_buff("oficial", "fire_rate", p("oficial", "fire_rate", 15.0), OFFICER_TICK * 2.0)
+	for gk in GRENADE_KINDS:
+		if has(gk):
+			_timers[gk] += delta
+			# Sinergia: un Zapador lanza las granadas un 30 % más a menudo
+			var gcd := p(gk, "cooldown", 6.0) * (0.7 if has("minas") else 1.0)
+			if _timers[gk] >= gcd:
+				if _throw_grenade(gk):
+					_timers[gk] = 0.0
 	if has("reparto_municion"):
 		_timers["municion"] += delta
 		if _timers["municion"] >= OFFICER_TICK:
@@ -168,9 +176,10 @@ func on_process(delta: float) -> void:
 			var rr := p("reparto_municion", "radius", 170.0)
 			for a in _allies(false):
 				if a.global_position.distance_to(troop.global_position) <= rr:
-					a.add_buff("municion", "reload_pct", p("reparto_municion", "reload_pct", -0.3), OFFICER_TICK * 2.0)
+					a.add_buff("municion", "reload", p("reparto_municion", "reload", -0.6), OFFICER_TICK * 2.0)
 	if has("guardia"):
 		_tick_guard(delta)
+	sk.on_process(delta)
 	if has("radio"):
 		_timers["radio_mark"] += delta
 		if _timers["radio_mark"] >= p("radio", "mark_interval", 4.0):
@@ -197,7 +206,7 @@ func _tick_guard(delta: float) -> void:
 			troop.show_text("🔭 En guardia", Color(0.6, 0.8, 1.0), 11, 8.0)
 		troop.queue_redraw()
 	if g:
-		troop.add_buff("guardia", "range_pct", p("guardia", "range_pct", 0.15), 0.3)
+		troop.add_buff("guardia", "range", p("guardia", "range", 50.0), 0.3)
 	_react_cd -= delta
 	var r: float = troop.get_attack_range()
 	for e in troop.get_tree().get_nodes_in_group("troops"):
@@ -212,19 +221,17 @@ func _tick_guard(delta: float) -> void:
 			reactions += 1
 
 
-## Bonos para el disparo que va a salir: {accuracy, crit_chance, damage_pct}.
+## Bonos para el disparo que va a salir: {accuracy, damage_pct}.
 func on_before_shot() -> Dictionary:
-	var b := {"accuracy": 0.0, "crit_chance": 0.0, "damage_pct": 0.0}
+	var b := {"accuracy": 0.0, "damage_pct": 0.0}
 	if has("guardia") and in_guard:
 		b.accuracy += p("guardia", "accuracy", 0.1)
 	if reaction_pending:
 		reaction_pending = false
-		b.crit_chance += p("guardia", "reaction_crit", 0.3)
-		b.damage_pct += p("guardia", "reaction_damage", 0.25)
+		b.damage_pct += p("guardia", "reaction_damage", 0.5)
 	if has("paciencia") and troop.still_time >= p("paciencia", "still_time", 1.0):
 		b.accuracy += p("paciencia", "accuracy", 0.15)
-		b.crit_chance += p("paciencia", "crit_chance", 0.10)
-	if has("ultimo_en_pie") and _allies(false).is_empty():
+	if has("ultimo_en_pie") and sk._real_allies(false).is_empty():
 		b.damage_pct += p("ultimo_en_pie", "damage_pct", 0.4)
 	# Coordenadas precisas (cualquiera): más daño contra blancos marcados
 	if has("coordenadas"):
@@ -235,26 +242,25 @@ func on_before_shot() -> Dictionary:
 	if has("tirador_elite"):
 		var t = troop.target
 		if t != null and is_instance_valid(t) and (t.suppressed_left > 0.0 or t.marked_left > 0.0):
-			b.crit_chance += p("tirador_elite", "crit_vs_pinned", 0.25)
+			b.damage_pct += p("tirador_elite", "damage_vs_pinned", 0.2)
+	sk.before_shot(b)
 	return b
 
 
 func on_hit(victim: Node, info: Dictionary) -> void:
+	sk.on_hit(victim, info)
 	# Enlace táctico (cualquiera): sus impactos marcan al blanco un momento (+daño recibido de todos)
 	if has("enlace") and is_instance_valid(victim) and not victim.is_dead and not info.get("friendly_fire", false):
 		victim.marked_left = maxf(victim.marked_left, p("enlace", "hit_mark", 2.0))
 		victim.marked_bonus = maxf(victim.marked_bonus, p("enlace", "mark_bonus", 0.1))
-	# Soldado: fuego de supresión — el blanco pierde precisión y velocidad un momento
+	# Soldado: fuego de supresión — el blanco pierde precisión, velocidad y cadencia un momento
 	if has("supresion") and is_instance_valid(victim) and not victim.is_dead and not info.get("friendly_fire", false):
-		var was: bool = victim.suppressed_left > 0.0
-		victim.suppressed_left = maxf(victim.suppressed_left, p("supresion", "duration", 1.5))
+		victim.apply_suppression(p("supresion", "duration", 1.5))
 		suppressions += 1
-		if not was and Time.get_ticks_msec() - int(victim.get_meta("supp_txt", -99999)) > SUPPRESS_TEXT_CD * 1000.0:
-			victim.set_meta("supp_txt", Time.get_ticks_msec())
-			victim.show_text("😰 Suprimido", Color(0.8, 0.85, 1.0), 11, 8.0)
 
 
 func on_damaged(_amount: float) -> void:
+	sk.on_damaged(_amount)
 	if has("botiquin") and not botiquin_used and troop.health > 0.0 \
 			and troop.health < troop.get_max_health() * p("botiquin", "threshold", 0.4):
 		botiquin_used = true
@@ -264,14 +270,15 @@ func on_damaged(_amount: float) -> void:
 
 
 func on_ally_died(_ally: Node) -> void:
+	sk.on_ally_died(_ally)
 	if has("venganza"):
-		troop.add_buff("venganza", "fire_rate_pct", p("venganza", "fire_rate_pct", 0.3), p("venganza", "duration", 4.0))
-		troop.add_buff("venganza_mov", "move_speed_pct", 0.15, p("venganza", "duration", 4.0))
+		troop.add_buff("venganza", "fire_rate", p("venganza", "fire_rate", 30.0), p("venganza", "duration", 4.0))
+		troop.add_buff("venganza_mov", "move_speed", 14.0, p("venganza", "duration", 4.0))
 		CombatFX.text(troop.get_parent(), troop.global_position + Vector2(0, -troop.overlay_top() - 30), "¡Venganza!", Color(1.0, 0.4, 0.3), 12)
 
 
 func on_kill(_victim: Node) -> void:
-	pass # gancho disponible para efectos futuros
+	sk.on_kill(_victim)
 
 
 # ---------------------------------------------------------------- efectos con lógica propia
@@ -312,7 +319,7 @@ func _self_regen(delta: float) -> void:
 
 ## Lanza la granada si hay un enemigo a media distancia (GRENADE_MIN..MAX_RANGE): primero su
 ## objetivo, si no el enemigo más cercano dentro de esa franja. Devuelve true si la lanzó.
-func _throw_grenade() -> bool:
+func _throw_grenade(kind: String = "granada") -> bool:
 	if troop.is_throwing():
 		return false
 	var tgt = troop.target
@@ -327,8 +334,14 @@ func _throw_grenade() -> bool:
 					tgt = e
 	if tgt == null:
 		return false
-	var dmg: float = p("granada", "damage", 30.0) * float(troop.stats.get("damage_mult", 1.0))
-	troop.throw_grenade(tgt, dmg, p("granada", "radius", 70.0))
+	var dmg: float = p(kind, "damage", 30.0) * float(troop.stats.get("damage_mult", 1.0))
+	var extra := {"blast": GRENADE_KINDS.get(kind, "fire")}
+	if kind == "granada_cegadora":
+		extra["suppress"] = p(kind, "blind", 3.0)
+	elif kind == "granada_gas":
+		extra["poison_pct"] = p(kind, "poison", 36.0) * float(troop.stats.get("damage_mult", 1.0)) / maxf(0.1, dmg)
+		extra["poison_duration"] = p(kind, "poison_time", 4.0)
+	troop.throw_grenade(tgt, dmg, p(kind, "radius", 70.0), extra)
 	grenades_thrown += 1
 	return true
 
@@ -452,7 +465,6 @@ func _call_artillery() -> bool:
 			CombatFX.explosion(parent, pos, radius)
 			for e in CombatFX.enemies_in_radius(tree, pos, radius, team):
 				var f := clampf(e.global_position.distance_to(pos) / radius, 0.0, 1.0)
-				CombatFX.apply_hit(e, {"damage": dmg * lerpf(1.0, 0.35, f), "crit": false, "lethal": false,
+				CombatFX.apply_hit(e, {"damage": dmg * lerpf(1.0, 0.35, f), "lethal": false,
 						"attacker": att if is_instance_valid(att) else null, "artillery": true}))
 	return true
-

@@ -259,7 +259,8 @@ func _items_text(card: TroopCard) -> String:
 			parts.append(UiKit.emo(it.emoji))
 	for i in TroopCard.MAX_ITEM_SLOTS - parts.size():
 		parts.append("○")
-	return "🎒 " + " ".join(parts)
+	var ammo := "  %s" % UiKit.emo(card.ammo.emoji) if card.ammo else ""
+	return "🎒 " + " ".join(parts) + ammo
 
 
 # ---------------------------------------------------------------- acciones

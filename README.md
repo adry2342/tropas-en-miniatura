@@ -6,7 +6,7 @@
 
 ## ⬇️ Descargar
 
-Última versión: **[v0.7.4 (alpha)](https://github.com/adry2342/tropas-en-miniatura/releases/latest)** — Windows (.exe), Android (.apk), Linux y proyecto de Godot (.zip). Novedades en el [CHANGELOG](CHANGELOG.md).
+Última versión: **[v0.7.5 (alpha)](https://github.com/adry2342/tropas-en-miniatura/releases/latest)** — Windows (.exe), Android (.apk), Linux y proyecto de Godot (.zip). Novedades en el [CHANGELOG](CHANGELOG.md).
 
 > Proyecto en desarrollo activo. Interfaz y textos en español. Pensado para PC; el Centro de mando ya está preparado también para móvil en horizontal.
 
@@ -42,7 +42,7 @@
 - **Tropas únicas y animadas**: cada recluta tiene nombre, vida y daño propios (±10 %), un arma y, a veces, un objeto o una especialidad. Andan, disparan, recargan (quietos), cambian de arma, lanzan granadas y caen al morir; el jefe tiene animaciones propias.
 - **Combate táctico automático**: IA por carriles, separación entre compañeros, distancia de combate según el arma, precisión que cae con la distancia, disparo en marcha solo con armas ligeras, explosiones con caída de daño, fuego amigo con balas desviadas, críticos/impactos letales y varias armas por tropa (cambia a la de reserva si se queda sin balas bajo fuego).
 - **8 armas** dibujadas en el estilo del juego: cuchillo, pistola, escopeta, subfusil, fusil de asalto, ametralladora, rifle de francotirador y bazuca. Se mejoran con ⭐. La escopeta pega más cuantos más perdigones acierten.
-- **Objetos** (3 huecos por tropa: munición, armadura, utilidad) y **habilidades pasivas** que se eligen al subir de nivel (cualquier tropa puede tener cualquier habilidad).
+- **Objetos** (3 huecos por tropa: munición, armadura, utilidad) y **38 habilidades pasivas** en 4 categorías (△ Daño, □ Tanque, S Movilidad, ○ Trampas y munición) que se eligen al subir de nivel: ruleta rusa, cadenas de explosiones, señuelos, cables trampa, resucitar enemigos de tu lado… (cualquier tropa puede tener cualquier habilidad).
 - **Economía de run**: monedas por baja y por victoria con interés; Puntos de Mando por victoria; presupuesto de poder enemigo que crece cada ronda.
 - **Códice** con todas las habilidades, objetos, armas y especialidades.
 - **Centro de mando** en vista ¾ con objetos interactivos que brillan al pasar el ratón: mesa táctica, tubos criogénicos con tus veteranos, archivo (Códice), terminal de especialidades, hangar del Modo Infinito y radio (Configuración).
@@ -57,7 +57,7 @@ Las tropas eligen especialidad al llegar a **Nv. 5** (algunos reclutas de la Int
 | 🎖️ **Soldado** | Fuego de supresión: los impactos reducen la precisión y la velocidad del blanco | Desde el principio |
 | 🩺 **Doctor** | Cura al aliado más herido y salva una vez a quien iba a caer | Llegar al 1.er Jefe de Sector |
 | 📡 **Radioperador** | Revela el mapa de calor enemigo, marca objetivos y pide artillería | Llegar al 2.º Jefe de Sector |
-| 🔭 **Vigía** | Quieto entra *En guardia*: más alcance y disparo de reacción a todo enemigo que entra en su zona; apunta al más peligroso y critica más a suprimidos o marcados | Llegar al 3.er Jefe de Sector |
+| 🔭 **Vigía** | Quieto entra *En guardia*: más alcance y disparo de reacción a todo enemigo que entra en su zona; apunta al más peligroso y pega más fuerte a suprimidos o marcados | Llegar al 3.er Jefe de Sector |
 | 🗡️ **Infiltrado** | Aparece tras las líneas enemigas *(mecánica en desarrollo)* | Vencer al Jefe Final |
 | 🔧 **Mecánico** | Especialista en vehículos *(en desarrollo)* | Llegar al 4.º Jefe de Sector |
 | 🧨 **Saboteador** | Sabotea vehículos, armas, trampas y minas enemigas *(en desarrollo)* | Completar el Modo Infinito |

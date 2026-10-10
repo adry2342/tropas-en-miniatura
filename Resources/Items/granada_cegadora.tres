@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/item_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "granada_cegadora"
+display_name = "Granada cegadora"
+description = "Cada 7 s, si hay un enemigo a media distancia, le lanza una granada cegadora: 5 de daño en radio 85 y deja a todos Suprimidos 3 s (−15 de precisión, −20 de cadencia, −22 de movilidad)."
+emoji = "💡"
+rarity = 1
+slot = 2
+effect_id = "granada_cegadora"
+params = {"cooldown": 7.0, "damage": 5.0, "radius": 85.0, "blind": 3.0}

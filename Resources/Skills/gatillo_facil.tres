@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 id = "gatillo_facil"
 display_name = "Gatillo fácil"
-description = "+15 % de cadencia, −5 % de precisión."
+description = "+15 de cadencia, −5 de precisión."
 emoji = "⚡"
 rarity = 0
-modifiers = {"fire_rate_pct": 0.15, "accuracy": -0.05}
+modifiers = {"fire_rate": 15.0, "accuracy": -5.0}

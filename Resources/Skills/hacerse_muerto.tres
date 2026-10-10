@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "hacerse_muerto"
+display_name = "Hacerse el muerto"
+description = "La primera vez que baja del 10 % de vida, tiene un 60 % de probabilidad de tirarse al suelo y hacerse el muerto 3 s: nadie le dispara."
+emoji = "😵"
+rarity = 1
+category = 3
+effect_id = "hacerse_muerto"
+params = {"threshold": 0.1, "chance": 0.6, "duration": 3.0}

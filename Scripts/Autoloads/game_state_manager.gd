@@ -54,7 +54,7 @@ func get_deployed_count() -> int:
 	var n := 0
 	for t in get_tree().get_nodes_in_group("troops"):
 		if is_instance_valid(t) and not t.is_queued_for_deletion() \
-				and t.team == t.Team.PLAYER and not t.has_meta("is_drag_preview"):
+				and t.team == t.Team.PLAYER and not t.has_meta("is_drag_preview") and not t.has_meta("summon"):
 			n += 1
 	return n
 
@@ -87,7 +87,7 @@ func get_army_cards() -> Array[TroopCard]:
 			out.append(dc)
 	for t in get_tree().get_nodes_in_group("troops"):
 		if is_instance_valid(t) and not t.is_queued_for_deletion() \
-				and t.team == t.Team.PLAYER and not t.has_meta("is_drag_preview") \
+				and t.team == t.Team.PLAYER and not t.has_meta("is_drag_preview") and not t.has_meta("summon") \
 				and t.get("card") is TroopCard and not t.card in out:
 			out.append(t.card)
 	for c in get_bench_cards():

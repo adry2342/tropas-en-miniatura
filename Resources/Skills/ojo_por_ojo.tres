@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "ojo_por_ojo"
+display_name = "Ojo por ojo"
+description = "Tras el primer golpe que recibe, guarda el daño de los 3 s siguientes (se ve en la barra de vida). Si mata a un enemigo, recupera el 50 % de lo guardado."
+emoji = "💢"
+rarity = 1
+category = 1
+effect_id = "ojo_por_ojo"
+params = {"window": 3.0, "heal": 0.5}

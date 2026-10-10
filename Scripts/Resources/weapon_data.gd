@@ -22,12 +22,8 @@ const FAMILY_NAMES := ["Pistola", "Automática", "Escopeta", "Precisión", "Pesa
 @export var accuracy_falloff: float = 0.10 # precisión perdida por cada 100 px más allá de optimal_range
 @export var magazine: int = 10            # 0 = infinito (no recarga)
 @export var reload_time: float = 1.5
-@export var crit_chance: float = 0.05
-@export var crit_multiplier: float = 1.8
 @export var pellets: int = 1              # perdigones por disparo
 @export var aoe_radius: float = 0.0       # >0 = explota y daña a todos los enemigos del radio
-@export var burn_dps: float = 0.0         # >0 = deja quemadura
-@export var burn_duration: float = 0.0
 @export var projectile: Projectile = Projectile.BALA
 @export var projectile_speed: float = 650.0
 @export var recruit_pool: bool = false    # puede salir como arma inicial de un recluta

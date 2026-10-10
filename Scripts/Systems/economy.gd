@@ -25,7 +25,9 @@ const REROLL_BASE := 1
 const EQUIPMENT_OFFERS := 4
 const WEAPON_OFFER_CHANCE := 0.3
 ## Bono por rango de entrenamiento a vida y daño.
-const TRAINING_BONUS := 0.06
+## Entrenamiento: cada rango suma estos puntos de vida y de daño.
+const TRAINING_HEALTH := 10.0
+const TRAINING_DAMAGE := 6.0
 # Precio de recluta en monedas: precio clásico (40–70) / divisor, acotado
 const RECRUIT_PRICE_DIVISOR := 3.3
 const RECRUIT_PRICE_MIN := 13
@@ -42,7 +44,7 @@ const RECRUIT_SPECIALTY_PRICE := 4
 # Mejora de armas con PM: nivel 1 (base) a 4. Coste en PM para pasar del nivel L al L+1 (índice = L).
 const WEAPON_MAX_LEVEL := 4
 const WEAPON_UPGRADE_COST := [0, 1, 2, 3]
-const WEAPON_UPGRADE_DAMAGE := 0.04 # +4 % de daño por mejora en todas las armas (suave)
+const WEAPON_UPGRADE_DAMAGE := 4.0 # +4 de daño por mejora en todas las armas (suave)
 
 # Subida de nivel: probabilidad de que salga una 3.ª mejora para elegir
 const THIRD_OFFER_CHANCE := 0.035
@@ -107,7 +109,7 @@ static func recruit_extras_surcharge(card: TroopCard) -> int:
 	if card and card.specialty != null:
 		extra += RECRUIT_SPECIALTY_PRICE
 	if card:
-		for it in card.items:
+		for it in card.items + ([card.ammo] if card.ammo else []):
 			if it is ItemData:
 				extra += roundi(ITEM_PRICE[clampi(it.rarity, 0, ITEM_PRICE.size() - 1)] * RECRUIT_ITEM_PRICE_FACTOR)
 	return extra
@@ -157,15 +159,15 @@ static func weapon_upgrade_mods(w: WeaponData, ranks: int) -> Dictionary:
 	if w == null or ranks <= 0:
 		return {}
 	var r := float(ranks)
-	var m := {"damage_pct": WEAPON_UPGRADE_DAMAGE * r}
+	var m := {"damage": WEAPON_UPGRADE_DAMAGE * r}
 	match w.family:
-		WeaponData.Family.PISTOLA: m["accuracy"] = 0.03 * r
-		WeaponData.Family.AUTOMATICA: m["magazine_pct"] = 0.08 * r
-		WeaponData.Family.ESCOPETA: m["fire_rate_pct"] = 0.04 * r
-		WeaponData.Family.PRECISION: m["range_pct"] = 0.05 * r
-		WeaponData.Family.PESADA: m["reload_pct"] = -0.06 * r
-		WeaponData.Family.EXPLOSIVO: m["aoe_pct"] = 0.06 * r
-		WeaponData.Family.CUERPO_A_CUERPO: m["move_speed_pct"] = 0.05 * r
+		WeaponData.Family.PISTOLA: m["accuracy"] = 3.0 * r
+		WeaponData.Family.AUTOMATICA: m["magazine"] = 1.0 * r
+		WeaponData.Family.ESCOPETA: m["fire_rate"] = 4.0 * r
+		WeaponData.Family.PRECISION: m["range"] = 30.0 * r
+		WeaponData.Family.PESADA: m["reload"] = -0.25 * r
+		WeaponData.Family.EXPLOSIVO: m["aoe"] = 4.0 * r
+		WeaponData.Family.CUERPO_A_CUERPO: m["move_speed"] = 5.0 * r
 	return m
 
 
@@ -175,14 +177,14 @@ static func weapon_upgrade_hint(w: WeaponData) -> String:
 		return ""
 	var extra := ""
 	match w.family:
-		WeaponData.Family.PISTOLA: extra = "+3 % precisión"
-		WeaponData.Family.AUTOMATICA: extra = "+8 % cargador"
-		WeaponData.Family.ESCOPETA: extra = "+4 % cadencia"
-		WeaponData.Family.PRECISION: extra = "+5 % alcance"
-		WeaponData.Family.PESADA: extra = "−6 % tiempo de recarga"
-		WeaponData.Family.EXPLOSIVO: extra = "+6 % radio de explosión"
-		WeaponData.Family.CUERPO_A_CUERPO: extra = "+5 % movimiento"
-	return "+%d %% daño y %s por nivel" % [roundi(WEAPON_UPGRADE_DAMAGE * 100.0), extra]
+		WeaponData.Family.PISTOLA: extra = "+3 de precisión"
+		WeaponData.Family.AUTOMATICA: extra = "+1 de cargador"
+		WeaponData.Family.ESCOPETA: extra = "+4 de cadencia"
+		WeaponData.Family.PRECISION: extra = "+30 de alcance"
+		WeaponData.Family.PESADA: extra = "−0,25 s de recarga"
+		WeaponData.Family.EXPLOSIVO: extra = "+4 de radio de explosión"
+		WeaponData.Family.CUERPO_A_CUERPO: extra = "+5 de movilidad"
+	return "+%d de daño y %s por nivel" % [roundi(WEAPON_UPGRADE_DAMAGE), extra]
 
 
 ## Vida fija del Jefe de Sector de la ronda (no depende de la variación ni del rendimiento).

@@ -15,6 +15,8 @@ func _ready() -> void:
 			c.items = [GameContent.find_item("granada")]
 		if i == 5 or i == 2:
 			c.specialty = GameContent.find_specialty("vigia")
+		# munición: aturdidoras en unos, venenosas en otros (en el cuchillo no debe hacer nada)
+		c.add_item(GameContent.find_item("balas_aturdidoras" if i % 2 == 0 else "balas_venenosas"))
 		if i == 1:
 			c.weapons = [ws[i], ws[0]]  # con dos armas: se ve el cambio al vaciar el cargador
 		_spawn(c, Vector2(90 + (i % 2) * 90, 60 + i * 46), 0)
@@ -38,4 +40,3 @@ func _spawn(c: TroopCard, p: Vector2, team: int) -> void:
 	t.card = c
 	add_child(t)
 	t.global_position = p
-

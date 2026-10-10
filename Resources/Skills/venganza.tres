@@ -6,8 +6,9 @@
 script = ExtResource("1_script")
 id = "venganza"
 display_name = "Venganza"
-description = "+30 % de cadencia durante 4 s cuando cae un aliado."
+description = "Cuando cae un aliado, dispara al instante contra quien lo mató (+50 de daño). Si acierta, gana +5 de vida máxima para siempre (máx. +50)."
 emoji = "😡"
 rarity = 1
-effect_id = "venganza"
-params = {"fire_rate_pct": 0.3, "duration": 4.0}
+category = 1
+effect_id = "venganza_tiro"
+params = {"damage_pct": 0.5, "hp_gain": 5.0, "hp_cap": 50.0}

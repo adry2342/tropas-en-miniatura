@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "problema_matarme"
+display_name = "El problema es matarme"
+description = "Cada vez que un enemigo le hace daño sin matarlo, ese enemigo le hace 4 menos de daño (de cada 100) el resto del combate, hasta −40."
+emoji = "🧱"
+rarity = 1
+category = 1
+effect_id = "problema_matarme"
+params = {"per_stack": 4.0, "cap": 40.0}

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ctwpiir7wkl7s"
-path="res://.godot/imported/arm_front.png-72dc47ed836769d617944c7fd73b2611.ctex"
+uid="uid://lymhusjhsgm6"
+path="res://.godot/imported/normal.png-e5b5883d0172ac87489789ecdbb47917.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Troop/arm_front.png"
-dest_files=["res://.godot/imported/arm_front.png-72dc47ed836769d617944c7fd73b2611.ctex"]
+source_file="res://Assets/Items/Ammo/normal.png"
+dest_files=["res://.godot/imported/normal.png-e5b5883d0172ac87489789ecdbb47917.ctex"]
 
 [params]
 

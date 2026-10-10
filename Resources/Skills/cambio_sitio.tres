@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "cambio_sitio"
+display_name = "Cambio de sitio"
+description = "La primera vez en cada combate que un golpe iba a matarlo, se cambia de sitio con el aliado vivo más cercano. El golpe sigue hacia donde estaba y el aliado se lleva la mitad."
+emoji = "🔀"
+rarity = 2
+category = 2
+effect_id = "cambio_sitio"
+params = {"share": 0.5}

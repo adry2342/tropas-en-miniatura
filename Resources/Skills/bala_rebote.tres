@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "bala_rebote"
+display_name = "Bala de rebote"
+description = "Cada impacto de bala tiene un 10 % de probabilidad de rebotar y dar a otro enemigo cercano (hasta 170 px) con el mismo daño."
+emoji = "🎱"
+rarity = 1
+category = 0
+needs = "bullets"
+effect_id = "bala_rebote"
+params = {"chance": 0.1, "radius": 170.0, "damage": 1.0}

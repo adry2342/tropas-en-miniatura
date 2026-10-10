@@ -132,6 +132,12 @@ func _entries(tab: int) -> Array:
 		3: list.assign(GameContent.specialties())
 	# Ordenadas por rareza y nombre
 	list.sort_custom(func(a, b): return _rar(a) < _rar(b) if _rar(a) != _rar(b) else String(a.display_name) < String(b.display_name))
+	if tab == 0:
+		# Habilidades: por categoría (△ Daño, □ Tanque, S Movilidad, ○ Trampas y munición) y luego por rareza
+		list.sort_custom(func(a, b):
+			if int(a.category) != int(b.category):
+				return int(a.category) < int(b.category)
+			return _rar(a) < _rar(b) if _rar(a) != _rar(b) else String(a.display_name) < String(b.display_name))
 	return list
 
 
@@ -440,6 +446,11 @@ func _make_tile(res: Resource) -> Button:
 	b.add_theme_stylebox_override("pressed", _tile_style(bg.darkened(0.08), col, 3))
 	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	b.tooltip_text = ("%s\n%s" % [res.display_name, String(res.description)]) if open else "???  Aún no descubierto"
+	if open and res is SkillData:
+		var badge := CategoryBadge.make(int((res as SkillData).category), 15)
+		badge.ink = Color("#3b2a18")
+		badge.position = Vector2(2, 2)
+		b.add_child(badge)
 	b.set_meta("entry", res)
 	b.mouse_entered.connect(_show_detail.bind(res))
 	b.mouse_exited.connect(func(): _show_detail(_pinned))
@@ -506,13 +517,16 @@ func _show_detail(res: Resource) -> void:
 		return
 	if res is SkillData:
 		var s := res as SkillData
-		meta += " · Habilidad pasiva (no ocupa hueco)"
+		meta = "%s · %s · Habilidad pasiva (no ocupa hueco)" % [s.get_category_name(), meta]
 		if s.stackable:
 			meta += " · Acumulable"
 		mods = TroopStats.describe_modifiers(s.modifiers)
 	elif res is ItemData:
 		var it := res as ItemData
-		meta += " · Objeto · %s · ocupa 1 hueco" % it.get_slot_name()
+		if it.slot == ItemData.Slot.MUNICION:
+			meta += " · Munición · hueco propio (sustituye a la cargada) · solo armas de bala"
+		else:
+			meta += " · Objeto · %s · ocupa 1 hueco" % it.get_slot_name()
 		mods = TroopStats.describe_modifiers(it.modifiers)
 	elif res is WeaponData:
 		var w := res as WeaponData

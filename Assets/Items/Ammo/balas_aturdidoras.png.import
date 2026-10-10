@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cui5e1u34hpqu"
-path="res://.godot/imported/arm_back.png-772284845f66f9850d4ca7d7cae596c6.ctex"
+uid="uid://buc4sr8v2rghc"
+path="res://.godot/imported/balas_aturdidoras.png-688c62c450efc53ee8b420cf732b7843.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Troop/arm_back.png"
-dest_files=["res://.godot/imported/arm_back.png-772284845f66f9850d4ca7d7cae596c6.ctex"]
+source_file="res://Assets/Items/Ammo/balas_aturdidoras.png"
+dest_files=["res://.godot/imported/balas_aturdidoras.png-688c62c450efc53ee8b420cf732b7843.ctex"]
 
 [params]
 

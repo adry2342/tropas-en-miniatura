@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "te_llevas_parte"
+display_name = "Te llevas parte de mí"
+description = "Al caer, reparte el 40 % de su vida máxima como curación entre los aliados vivos, más el daño que sobró del golpe que lo mató (hasta otro 40 %)."
+emoji = "💚"
+rarity = 1
+category = 1
+effect_id = "te_llevas_parte"
+params = {"pct": 0.4, "overkill_cap": 0.4}

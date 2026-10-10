@@ -6,8 +6,8 @@
 script = ExtResource("1_script")
 id = "sangre_fria"
 display_name = "Sangre fría"
-description = "+0,25 al multiplicador de crítico. Requiere Ojo certero."
+description = "No se le acelera el pulso: +8 de daño y +5 de precisión. Requiere Ojo certero."
 emoji = "🧊"
 rarity = 1
 requires = Array[String](["ojo_certero"])
-modifiers = {"crit_mult": 0.25}
+modifiers = {"damage": 8.0, "accuracy": 5.0}

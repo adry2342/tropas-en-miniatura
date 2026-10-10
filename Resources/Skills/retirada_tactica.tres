@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "retirada_tactica"
+display_name = "Retirada táctica"
+description = "Cuando vacía el cargador, salta hacia atrás alejándose del enemigo más cercano y recarga con +25 de evasión."
+emoji = "↩️"
+rarity = 1
+category = 2
+needs = "magazine"
+effect_id = "retirada_tactica"
+params = {"jump": 70.0, "dodge": 25.0}

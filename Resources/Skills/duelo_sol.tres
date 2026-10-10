@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "duelo_sol"
+display_name = "Duelo al sol"
+description = "El primer enemigo que le hace daño se convierte en su rival: le apunta a él, +30 de daño contra él y −10 contra el resto. Si el rival cae, el siguiente que le dé ocupa su lugar."
+emoji = "🤠"
+rarity = 1
+category = 0
+effect_id = "duelo_sol"
+params = {"vs": 30.0, "others": -10.0}

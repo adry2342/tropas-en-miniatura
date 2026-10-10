@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "trinchera"
+display_name = "Trinchera"
+description = "Cada 1,5 s que pasa quieto apila un saco terrero: −7 de daño recibido (de cada 100) por saco, hasta 3. En cuanto se mueve, los pierde."
+emoji = "⛺"
+rarity = 1
+category = 1
+effect_id = "trinchera"
+params = {"every": 1.5, "per_stack": 7.0, "stacks": 3.0}

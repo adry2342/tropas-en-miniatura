@@ -6,8 +6,8 @@
 script = ExtResource("1_script")
 id = "oficial"
 display_name = "Oficial"
-description = "Aura: +15 % de cadencia a los aliados a 180 px o menos."
+description = "Aura: +15 de cadencia a los aliados a 180 px o menos."
 emoji = "🎖️"
 rarity = 2
 effect_id = "oficial"
-params = {"radius": 180.0, "fire_rate_pct": 0.15}
+params = {"radius": 180.0, "fire_rate": 15.0}

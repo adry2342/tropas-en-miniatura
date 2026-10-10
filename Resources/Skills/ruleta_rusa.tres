@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "ruleta_rusa"
+display_name = "Ruleta rusa"
+description = "Una vez por combate saca un revólver con 1 bala y 6 recámaras y aprieta el gatillo alternando: a sí mismo, al enemigo más peligroso, a sí mismo… Si la bala sale contra el enemigo, lo mata en el acto (a un jefe le quita el 35 % de su vida máxima). Si sale contra él… mala suerte."
+emoji = "🎲"
+rarity = 3
+category = 0
+player_only = true
+effect_id = "ruleta_rusa"
+params = {"delay": 3.0, "pull_time": 0.32, "boss_pct": 0.35}

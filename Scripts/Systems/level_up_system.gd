@@ -49,9 +49,34 @@ static func weighted_index(weights: Array, rng: RandomNumberGenerator) -> int:
 	return weights.size() - 1
 
 
+## La munición solo se ofrece a quien lleva alguna arma de bala.
+static func _uses_bullets(card: TroopCard) -> bool:
+	for w in card.weapons:
+		if TroopStats.uses_ammo(w):
+			return true
+	return false
+
+
+## true si lleva alguna arma con cargador (las de cuerpo a cuerpo no tienen).
+static func _uses_magazine(card: TroopCard) -> bool:
+	for w in card.weapons:
+		if w and w.magazine > 0:
+			return true
+	return false
+
+
 static func _skill_ok(card: TroopCard, s: SkillData) -> bool:
 	if card.has_skill(s.id) and not s.stackable:
 		return false
+	if s.player_only and card.is_enemy:
+		return false
+	match s.needs:
+		"magazine":
+			if not _uses_magazine(card):
+				return false
+		"bullets":
+			if not _uses_bullets(card):
+				return false
 	for req in s.requires:
 		if not card.has_skill(req):
 			return false
@@ -73,7 +98,7 @@ static func candidates(card: TroopCard, type: String, round_limit: int = 0) -> A
 					out.append({"resource": s, "weight": rarity_weight(s.rarity)})
 		"item":
 			for it in GameContent.items():
-				if card.can_add_item(it):
+				if card.can_add_item(it) and (not card.is_ammo(it) or _uses_bullets(card)):
 					out.append({"resource": it, "weight": rarity_weight(it.rarity)})
 		"weapon":
 			for w in GameContent.weapons():

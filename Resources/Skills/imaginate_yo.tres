@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "imaginate_yo"
+display_name = "¿Bueno con esa arma? Imagínate yo"
+description = "Si un enemigo le ataca con su misma arma, gana +3 de vida máxima para siempre (una vez por combate)."
+emoji = "😏"
+rarity = 0
+category = 1
+effect_id = "imaginate_yo"
+params = {"hp_gain": 3.0}

@@ -1,8 +1,9 @@
 class_name ItemData
 extends Resource
-## Objeto o equipo: ocupa 1 de los 3 huecos de la tropa.
+## Objeto o equipo. ARMADURA y UTILIDAD ocupan 1 de los 3 huecos de la tropa (máx. 1 armadura);
+## MUNICION va en su propio hueco (TroopCard.ammo): cargar otra sustituye a la que hubiera.
 
-enum Slot { MUNICION, ARMADURA, UTILIDAD } # máx. 1 MUNICION y 1 ARMADURA por tropa
+enum Slot { MUNICION, ARMADURA, UTILIDAD }
 
 const SLOT_NAMES := ["Munición", "Armadura", "Utilidad"]
 

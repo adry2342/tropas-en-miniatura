@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "paso_fantasma"
+display_name = "Paso fantasma"
+description = "+8 de evasión. Cada 3 ataques esquivados desaparece 1 s y reaparece cerca: los enemigos que le apuntaban pierden el objetivo."
+emoji = "👻"
+rarity = 2
+category = 2
+modifiers = {"dodge": 8.0}
+effect_id = "paso_fantasma"
+params = {"dodges": 3.0, "vanish": 1.0}

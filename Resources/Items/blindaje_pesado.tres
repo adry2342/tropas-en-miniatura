@@ -6,8 +6,8 @@
 script = ExtResource("1_script")
 id = "blindaje_pesado"
 display_name = "Blindaje pesado"
-description = "−20 % de daño recibido, −15 % de movimiento."
+description = "+20 de armadura, −14 de movilidad."
 emoji = "🛡️"
 rarity = 1
 slot = 1
-modifiers = {"armor": 0.2, "move_speed_pct": -0.15}
+modifiers = {"armor": 20.0, "move_speed": -14.0}

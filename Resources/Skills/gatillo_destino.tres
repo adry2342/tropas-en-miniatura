@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "gatillo_destino"
+display_name = "Gatillo del destino"
+description = "Cuando le queda la última bala del cargador, ese disparo acierta seguro, ignora la mitad de la evasión del blanco y tiene un 10 % de matarlo al instante (a un jefe le hace ×3 de daño)."
+emoji = "🎯"
+rarity = 2
+category = 0
+needs = "magazine"
+effect_id = "gatillo_destino"
+params = {"kill_chance": 0.1, "dodge_ignore": 0.5}

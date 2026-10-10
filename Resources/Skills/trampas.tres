@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "trampas"
+display_name = "Trampas"
+description = "Al empezar el combate tira cuántos cepos coloca en tierra de nadie, en su carril: 0 (lo más probable), 1 o 2. El enemigo que pisa uno recibe 20 de daño y se queda clavado 2 s."
+emoji = "🪤"
+rarity = 0
+category = 3
+effect_id = "trampas"
+params = {"w0": 50.0, "w1": 35.0, "w2": 15.0, "damage": 20.0, "root": 2.0}

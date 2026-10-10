@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "doble_recarga"
+display_name = "Doble tirada de recarga"
+description = "Cada recarga tira dos veces su duración (entre el 60 % y el 120 % de la normal) y se queda la más rápida. Cargador veloz y Recarga desesperada también tiran dos veces."
+emoji = "🎲"
+rarity = 1
+category = 3
+needs = "magazine"
+effect_id = "doble_recarga"
+params = {"min": 0.6, "max": 1.2}

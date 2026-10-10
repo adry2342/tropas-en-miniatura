@@ -6,9 +6,9 @@
 script = ExtResource("1_script")
 id = "inyector_adrenalina"
 display_name = "Inyector de adrenalina"
-description = "Al empezar el combate: frenético durante 5 s (+40 % de cadencia y +30 % de velocidad)."
+description = "Al empezar el combate: frenético durante 5 s (+40 de cadencia y +27 de movilidad)."
 emoji = "💉"
 rarity = 1
 slot = 2
 effect_id = "adrenalina"
-params = {"fire_rate_pct": 0.4, "move_speed_pct": 0.3, "duration": 5.0}
+params = {"fire_rate": 40.0, "move_speed": 27.0, "duration": 5.0}

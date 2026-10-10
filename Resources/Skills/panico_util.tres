@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "panico_util"
+display_name = "Pánico útil"
+description = "Una vez por combate, al bajar del 20 % de vida entra en pánico 3,5 s: corre en zigzag sin dejar de disparar, con +35 de evasión y +25 de movilidad pero −12 de precisión."
+emoji = "😱"
+rarity = 1
+category = 2
+effect_id = "panico_util"
+params = {"threshold": 0.2, "duration": 3.5, "dodge": 35.0, "accuracy": -12.0, "speed": 25.0}

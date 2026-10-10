@@ -14,7 +14,7 @@ extends RefCounted
 ##   "description": una frase con lo que hace
 ##   "cost":        Medallas de mando que cuesta desbloquearlo
 ##   "modifiers":   modificadores de estadística que SUMA este rango, con las mismas claves que
-##                  TroopStats.MODIFIER_KEYS (p. ej. {"health_pct": 0.10, "accuracy": 0.05})
+##                  TroopStats.MODIFIER_KEYS (p. ej. {"health": 10.0, "accuracy": 5.0})
 ##   "effects":     efectos especiales {effect_id: params}, igual que SpecialtyData.extra_effects
 ##                  (se resuelven en effects.gd; p. ej. {"autocuracion": {"hps": 2.0}})
 ## Los rangos se ACUMULAN: con rango 3 la tropa tiene los modificadores de los nodos 1, 2 y 3 sumados

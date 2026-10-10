@@ -319,6 +319,8 @@ func _type_line(res: Resource) -> String:
 	if res is WeaponData:
 		return "🔫 Arma · %s" % res.get_family_name()
 	if res is ItemData:
+		if res.slot == ItemData.Slot.MUNICION:
+			return "%s Munición · hueco propio" % SLOT_EMOJI[0]
 		return "%s %s · 1 hueco" % [SLOT_EMOJI[clampi(res.slot, 0, 2)], res.get_slot_name()]
 	return ""
 

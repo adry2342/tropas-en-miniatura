@@ -87,8 +87,8 @@ for poly, edge in (
 part(upper_m).save(f"{OUT}/troop/body.png")
 part(legb_m, patched).save(f"{OUT}/troop/leg_back.png")
 part(legf_m, patched).save(f"{OUT}/troop/leg_front.png")
-part(farm_m).save(f"{OUT}/troop/arm_front.png")
-part(barm_m).save(f"{OUT}/troop/arm_back.png")
+# Los brazos ya no salen del sprite: se dibujan por código (TroopRig.Limb) y las manos con gen_hand.py.
+# Después de este script: python clean_sleeves.py <Assets/Troop> (limpia restos de brazo en mangas/cuerpo).
 part(poly_mask(FRONT_SLEEVE)).save(f"{OUT}/troop/sleeve_front.png")
 part(poly_mask(BACK_SLEEVE)).save(f"{OUT}/troop/sleeve_back.png")
 

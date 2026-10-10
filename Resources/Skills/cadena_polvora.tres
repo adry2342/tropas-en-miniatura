@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "cadena_polvora"
+display_name = "Cadena de pólvora"
+description = "Cuando mata a un enemigo, el cuerpo explota 0,6 s después: 18 de daño más el 12 % de la vida máxima del caído (máx. 70) en radio 75. Si la explosión mata a otro, ese también explota: reacción en cadena."
+emoji = "🧨"
+rarity = 2
+category = 0
+effect_id = "cadena_polvora"
+params = {"delay": 0.6, "radius": 75.0, "base": 18.0, "hp_pct": 0.12, "cap": 70.0}

@@ -6,8 +6,8 @@
 script = ExtResource("1_script")
 id = "chaleco_tactico"
 display_name = "Chaleco táctico"
-description = "+25 de vida, −5 % de movimiento."
+description = "+25 de vida, −5 de movilidad."
 emoji = "🦺"
 rarity = 0
 slot = 1
-modifiers = {"health_flat": 25.0, "move_speed_pct": -0.05}
+modifiers = {"health": 25.0, "move_speed": -5.0}

@@ -358,9 +358,11 @@ static func card_to_dict(c: TroopCard) -> Dictionary:
 		"weapons": c.weapons.filter(func(w): return w != null).map(func(w): return w.id),
 		"equipped_weapon": c.equipped_weapon,
 		"items": c.items.filter(func(i): return i != null).map(func(i): return i.id),
+		"ammo": c.ammo.id if c.ammo else "",
 		"skills": c.skills.filter(func(s): return s != null).map(func(s): return s.id),
 		"training_ranks": c.training_ranks,
 		"weapon_levels": c.weapon_levels.duplicate(),
+		"skill_health": c.skill_health.duplicate(),
 	}
 
 
@@ -384,8 +386,11 @@ static func card_from_dict(d) -> TroopCard:
 	c.equipped_weapon = clampi(int(d.get("equipped_weapon", 0)), 0, c.weapons.size() - 1)
 	for id in d.get("items", []):
 		var it := GameContent.find_item(str(id))
-		if it and c.items.size() < TroopCard.MAX_ITEM_SLOTS:
-			c.items.append(it)
+		if it:
+			c.add_item(it)   # la munición va a su hueco; el resto, si cabe
+	var am := GameContent.find_item(str(d.get("ammo", "")))
+	if am and c.is_ammo(am):
+		c.ammo = am
 	for id in d.get("skills", []):
 		var s := GameContent.find_skill(str(id))
 		if s:
@@ -395,4 +400,8 @@ static func card_from_dict(d) -> TroopCard:
 	if wl is Dictionary:
 		for k in wl:
 			c.weapon_levels[str(k)] = int(wl[k])
+	var sh = d.get("skill_health", {})
+	if sh is Dictionary:
+		for k in sh:
+			c.skill_health[str(k)] = float(sh[k])
 	return c

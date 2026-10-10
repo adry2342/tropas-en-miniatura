@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "cable_trampa"
+display_name = "Cable trampa"
+description = "Al empezar el combate tiende un cable en su carril, en tierra de nadie. El primer enemigo que lo cruza cae al suelo 1,5 s y, durante 4 s, cada bala que recibe tiene un 8 % de ser letal."
+emoji = "🧵"
+rarity = 1
+category = 3
+effect_id = "cable_trampa"
+params = {"stun": 1.5, "downed": 4.0, "lethal": 0.08}

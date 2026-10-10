@@ -286,11 +286,20 @@ func _make_card(offer: Dictionary, index: int) -> PanelContainer:
 	name_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(name_l)
 	if type != "specialty" and type != "training":
+		var rrow := HBoxContainer.new()
+		rrow.alignment = BoxContainer.ALIGNMENT_CENTER
+		rrow.add_theme_constant_override("separation", 8)
+		v.add_child(rrow)
+		if res is SkillData:
+			var sk0 := res as SkillData
+			rrow.add_child(CategoryBadge.make(int(sk0.category), 18))
+			rrow.add_child(UiKit.label(sk0.get_category_name(), 12, sk0.get_category_color()))
+			rrow.add_child(UiKit.label("·", 12, UiKit.MUTED))
 		var rl := UiKit.label(UiKit.rarity_name(rarity), 12, UiKit.rarity_color(rarity))
 		rl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		v.add_child(rl)
+		rrow.add_child(rl)
 
-	var desc_txt := "Instrucción intensiva: +%d %% de vida y de daño. Se acumula con cada entrenamiento." % roundi(Economy.TRAINING_BONUS * 100.0) if type == "training" else (String(res.get("description")) if res else "")
+	var desc_txt := "Instrucción intensiva: +%d de vida y +%d de daño. Se acumula con cada entrenamiento." % [roundi(Economy.TRAINING_HEALTH), roundi(Economy.TRAINING_DAMAGE)] if type == "training" else (String(res.get("description")) if res else "")
 	var desc := UiKit.wrap_label(desc_txt, 13, UiKit.TEXT.darkened(0.12))
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(desc)
@@ -316,13 +325,16 @@ func _make_card(offer: Dictionary, index: int) -> PanelContainer:
 			dv.add_child(UiKit.label("✓ Pasiva permanente · no ocupa hueco", 12, type_color.lightened(0.3)))
 		"item":
 			var it := res as ItemData
-			dv.add_child(UiKit.label("Hueco: %s · %d/%d ocupados" % [it.get_slot_name(), card.items.size(), TroopCard.MAX_ITEM_SLOTS], 12, type_color.lightened(0.3)))
+			if card.is_ammo(it):
+				dv.add_child(UiKit.label("Hueco de munición · sustituye a %s" % card.get_ammo_name(), 12, type_color.lightened(0.3)))
+			else:
+				dv.add_child(UiKit.label("Hueco: %s · %d/%d ocupados" % [it.get_slot_name(), card.items.size(), TroopCard.MAX_ITEM_SLOTS], 12, type_color.lightened(0.3)))
 			_details_mods(dv, it.modifiers, "Efecto")
 		"weapon":
 			_details_weapon(dv, res as WeaponData)
 		"training":
-			dv.add_child(UiKit.label("❤ +%d %% de vida máxima" % roundi(Economy.TRAINING_BONUS * 100.0), 12, UiKit.HEALTH))
-			dv.add_child(UiKit.label("💥 +%d %% de daño" % roundi(Economy.TRAINING_BONUS * 100.0), 12, UiKit.DAMAGE))
+			dv.add_child(UiKit.label("❤ +%d de vida máxima" % roundi(Economy.TRAINING_HEALTH), 12, UiKit.HEALTH))
+			dv.add_child(UiKit.label("💥 +%d de daño" % roundi(Economy.TRAINING_DAMAGE), 12, UiKit.DAMAGE))
 			dv.add_child(UiKit.label("Rangos actuales: %d → %d" % [card.training_ranks, card.training_ranks + 1], 12, type_color.lightened(0.3)))
 			dv.add_child(UiKit.label("♻ Acumulable sin límite", 12, UiKit.MUTED))
 
@@ -356,7 +368,7 @@ func _details_specialty(box: VBoxContainer, sp: SpecialtyData) -> void:
 	var cur := card.get_weapon()
 	if cur:
 		var ok := sp.is_affine(cur)
-		box.add_child(UiKit.wrap_label(("✓ Su %s es afín: +15 %% daño y +10 de precisión" if ok else "✗ Su %s no es afín") % cur.display_name, 12, UiKit.UP if ok else UiKit.MUTED))
+		box.add_child(UiKit.wrap_label(("✓ Su %s es afín: +15 de daño y +10 de precisión" if ok else "✗ Su %s no es afín") % cur.display_name, 12, UiKit.UP if ok else UiKit.MUTED))
 	box.add_child(UiKit.label("✦ %s" % sp.passive_name, 13, sp.color.lightened(0.2)))
 	box.add_child(UiKit.wrap_label(sp.passive_description, 12, UiKit.MUTED))
 	if sp.synergy_text != "":

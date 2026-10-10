@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 id = "cargador_ampliado"
 display_name = "Cargador ampliado"
-description = "+40 % de cargador."
+description = "+3 de cargador."
 emoji = "📦"
 rarity = 0
-modifiers = {"magazine_pct": 0.4}
+modifiers = {"magazine": 3.0}

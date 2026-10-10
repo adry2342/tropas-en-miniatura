@@ -89,7 +89,7 @@ static func make_recruit(rng: RandomNumberGenerator = null, allow_specialty: boo
 		var items: Array = []
 		var weights: Array = []
 		for it in GameContent.items():
-			if it.rarity <= 1 and c.can_add_item(it):
+			if it.rarity <= 1 and c.can_add_item(it) and (not c.is_ammo(it) or TroopStats.uses_ammo(c.get_weapon())):
 				items.append(it)
 				weights.append(LevelUpSystem.rarity_weight(it.rarity))
 		var i := LevelUpSystem.weighted_index(weights, rng)

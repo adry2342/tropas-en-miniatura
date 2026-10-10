@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "ni_muerto"
+display_name = "Ni muerto me ganas"
+description = "Si un enemigo lo mata, ese enemigo queda condenado y muere 5 s después. Si es un jefe, pierde la mitad de la vida que le quede."
+emoji = "💀"
+rarity = 2
+category = 1
+effect_id = "ni_muerto"
+params = {"delay": 5.0, "boss_pct": 0.5}

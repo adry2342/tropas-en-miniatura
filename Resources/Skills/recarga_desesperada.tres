@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "recarga_desesperada"
+display_name = "Recarga desesperada"
+description = "Una vez por combate, si recarga por debajo del 25 % de vida, la recarga es instantánea pero con un número de balas al azar entre 1 y el cargador completo."
+emoji = "🎰"
+rarity = 1
+category = 3
+needs = "magazine"
+effect_id = "recarga_desesperada"
+params = {"threshold": 0.25}

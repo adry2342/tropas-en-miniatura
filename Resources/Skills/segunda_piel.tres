@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "segunda_piel"
+display_name = "Segunda piel"
+description = "Empieza cada combate con un escudo de 15 que se gasta antes que la vida. Las curaciones que le sobran con la vida llena se convierten en escudo (máx. 40)."
+emoji = "🫧"
+rarity = 1
+category = 1
+effect_id = "segunda_piel"
+params = {"start": 15.0, "cap": 40.0}

@@ -161,8 +161,9 @@ static func slots_text(card: TroopCard) -> String:
 	return s
 
 
+## Puntos de una estadística (fracción interna × 100): todas se muestran en puntos, nunca en %.
 static func pct(v: float) -> String:
-	return "%d %%" % roundi(v * 100.0)
+	return "%d" % roundi(v * 100.0)
 
 
 static func health_text(s: Dictionary) -> String:
@@ -253,7 +254,7 @@ static func make_recruit_card(card: TroopCard, width: float = 230.0, show_weapon
 		wv.add_child(label("Alcance %d · Precisión %s" % [roundi(s.attack_range), pct(s.accuracy)], 11, MUTED))
 	else:
 		wv.add_child(label(w.get_family_name(), 11, MUTED))
-	if show_weapon_stats or not card.items.is_empty() or card.specialty:
+	if show_weapon_stats or not card.items.is_empty() or card.ammo or card.specialty:
 		box.add_child(recruit_extras_box(card))
 	return root
 
@@ -267,7 +268,7 @@ static func recruit_extras_box(card: TroopCard) -> PanelContainer:
 	v.add_theme_constant_override("separation", 2)
 	pbox.add_child(v)
 	var has_item := false
-	for it in card.items:
+	for it in card.items + ([card.ammo] if card.ammo else []):
 		if not (it is ItemData):
 			continue
 		has_item = true

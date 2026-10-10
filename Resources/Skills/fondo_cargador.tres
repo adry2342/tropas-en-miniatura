@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "fondo_cargador"
+display_name = "Fondo del cargador"
+description = "Las balas del último tercio del cargador hacen +25 de daño."
+emoji = "🥫"
+rarity = 1
+category = 0
+needs = "magazine"
+effect_id = "fondo_cargador"
+params = {"damage": 25.0}

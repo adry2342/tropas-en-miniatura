@@ -27,7 +27,6 @@ var _confirm_button: Button
 var _skip_button: Button
 var _vault_info: Label
 # --- Nombre del veterano (se escribe al guardarlo; en móvil sale el teclado del sistema) ---
-const NAME_MAX_LEN := 16
 var _name_layer: Control
 var _name_edit: LineEdit
 var _name_ok: Button
@@ -334,12 +333,12 @@ func _build_name_dialog() -> void:
 	var t := UiKit.label("🏛  ¿Cómo se llamará este veterano?", 20, UiKit.GOLD)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(t)
-	var hint := UiKit.label("Así aparecerá en su tubo criogénico. Máximo %d letras." % NAME_MAX_LEN, 13, UiKit.MUTED)
+	var hint := UiKit.label("Así aparecerá en su tubo criogénico. Máximo %d letras." % TroopCard.NAME_MAX_LEN, 13, UiKit.MUTED)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(hint)
 	_name_edit = LineEdit.new()
 	_name_edit.name = "NameEdit"
-	_name_edit.max_length = NAME_MAX_LEN
+	_name_edit.max_length = TroopCard.NAME_MAX_LEN
 	_name_edit.placeholder_text = "Nombre del soldado"
 	_name_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_name_edit.custom_minimum_size = Vector2(360, 48)
@@ -388,17 +387,13 @@ func _close_name_dialog() -> void:
 		_name_edit.release_focus()
 
 
-func _clean_name(t: String) -> String:
-	return t.strip_edges().substr(0, NAME_MAX_LEN)
-
-
 func _validate_name() -> void:
 	if _name_ok:
-		_name_ok.disabled = _clean_name(_name_edit.text) == ""
+		_name_ok.disabled = TroopCard.clean_name(_name_edit.text) == ""
 
 
 func _accept_name() -> void:
-	var n := _clean_name(_name_edit.text)
+	var n := TroopCard.clean_name(_name_edit.text)
 	if n == "":
 		return
 	_close_name_dialog()
@@ -420,8 +415,8 @@ func confirm_store(new_name: String = "") -> bool:
 	if full and replace_index < 0:
 		return false
 	var card := candidates[selected_index]
-	if _clean_name(new_name) != "":
-		card.unit_name = _clean_name(new_name)
+	if TroopCard.clean_name(new_name) != "":
+		card.unit_name = TroopCard.clean_name(new_name)
 	if not pm.store_troop(card, replace_index if full else -1):
 		return false
 	stored_card = card

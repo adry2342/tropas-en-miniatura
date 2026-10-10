@@ -2,6 +2,23 @@
 
 Todas las versiones notables de **Tropas en miniatura**. Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones con [SemVer](https://semver.org/lang/es/).
 
+## [0.7.5] - 2026-10-10
+
+### Añadido
+- **30 habilidades generales nuevas** en 4 categorías con su símbolo: △ Daño (Ruleta rusa, Bala de rebote, Gatillo del destino, Cadena de pólvora, Todo al rojo, Deuda de sangre), □ Tanque (Ni muerto me ganas, Venganza, ¿Bueno con esa arma? Imagínate yo, Carne de cañón, Ojo por ojo, Te llevas parte de mí, El problema es matarme), S Movilidad (Último en pie, Esquive, No me pillas dos veces, Cambio de sitio, Pánico útil, Paso fantasma) y ○ Trampas y munición (Doble tirada de recarga, Efecto mariposa, Cargador veloz, Trampas, Munición fantasma, Píldora roja, Cable trampa, Señuelo, Hacerse el muerto, Recarga desesperada, Robo de cargador).
+- 8 habilidades más (2 por categoría): Fondo del cargador, Duelo al sol, Segunda piel, Trinchera, Inercia, Retirada táctica, Balas trazadoras y Cebo explosivo.
+- **Munición inicial aleatoria:** no siempre se empieza el combate con el cargador lleno (lo normal es bastante, a veces medio, alguna vez 1 bala).
+- **Granada cegadora** y **Granada de gas** (objetos).
+- Símbolo de categoría en la subida de nivel, la ficha de tropa y el Códice.
+
+### Cambiado
+- Las habilidades antiguas se retiran de forma provisional (los veteranos guardados las conservan).
+- **Estadísticas en puntos** en vez de porcentajes (+15 de daño, +10 de movilidad…).
+- **Munición con hueco propio** y rehecha: Venenosas (veneno que ignora armadura), Perforantes y Aturdidoras, cada una con su desventaja. Fuera las de punta hueca e incendiarias.
+- **Fuera el golpe crítico**; el impacto letal se mantiene.
+- **Ficha de tropa rehecha**: más compacta, estadísticas en cuadrícula y explicaciones al tocar. Se puede **renombrar** a las tropas.
+- Brazos y manos de las tropas rehechos (agarre de las armas sin cortes).
+
 ## [0.7.4] - 2026-10-09
 
 ### Añadido

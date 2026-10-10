@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Resources/skill_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+id = "robo_cargador"
+display_name = "Robo de cargador"
+description = "Cuando muere un enemigo a menos de 220 px, tiene un 30 % de probabilidad de correr hasta su cuerpo y robarle el cargador: gana las balas que le quedaban (puede pasarse del cargador)."
+emoji = "🧲"
+rarity = 1
+category = 3
+needs = "magazine"
+effect_id = "robo_cargador"
+params = {"chance": 0.3, "radius": 220.0, "timeout": 3.0}

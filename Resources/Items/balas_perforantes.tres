@@ -1,13 +1,18 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3 uid="uid://cq5qvtjpnw3s6"]
 
-[ext_resource type="Script" path="res://Scripts/Resources/item_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dvmq6bni2mig4" path="res://Scripts/Resources/item_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://pbm85cyopj0e" path="res://Assets/Items/Ammo/balas_perforantes.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_script")
 id = "balas_perforantes"
 display_name = "Balas perforantes"
-description = "Las balas atraviesan a 1 enemigo más."
+description = "−15 de daño, pero cada bala atraviesa a 1 enemigo más (con dos en fila, casi el doble de daño). Solo armas de bala."
 emoji = "🔩"
 rarity = 1
+icon = ExtResource("2_icon")
 slot = 0
-modifiers = {"pierce": 1.0}
+modifiers = {
+"damage": -15.0,
+"pierce": 1.0
+}

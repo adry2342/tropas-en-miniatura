@@ -5,8 +5,11 @@
 [resource]
 script = ExtResource("1_script")
 id = "esquiva"
-display_name = "Esquiva"
-description = "+12 % de probabilidad de esquivar un impacto."
+display_name = "Esquive"
+description = "+10 de evasión. Cada ataque que esquiva le da otros +10, hasta +40 en total. Lo ganado se pierde al acabar el combate."
 emoji = "💨"
 rarity = 1
-modifiers = {"dodge": 0.12}
+category = 2
+modifiers = {"dodge": 10.0}
+effect_id = "esquive"
+params = {"per_dodge": 10.0, "cap": 30.0}
