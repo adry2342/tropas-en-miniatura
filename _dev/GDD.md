@@ -1,7 +1,7 @@
 # Tropas en miniatura — GDD vivo y estado del proyecto
 
 > **Para quien lea esto (persona u otra IA):** este documento es el "compact" del juego, todo lo necesario para continuar el desarrollo sin el historial de chats. Si algo no cuadra con el código, **manda el código** (y conviene actualizar este archivo).
-> Última actualización: **2026-10-10** · versión del proyecto **0.7.3** (+ cambios sin publicar, ver §13).
+> Última actualización: **2026-10-10** · versión del proyecto **0.7.5** (+ cambios sin publicar, ver §13).
 > El GDD original de la idea está en `_dev/GDD_original_backup.txt/.docx` (solo histórico; está superado por este).
 
 ---
@@ -494,7 +494,7 @@ Se elige al llegar a Nv. 5.
 - Se sube el último número (0.7.2 → 0.7.3…) en `project.godot` y `export_presets.cfg`, junto con `version/code` de Android.
 - Hay que actualizar `CHANGELOG.md` (formato Keep a Changelog) y el README, que lleva capturas en `docs/img`.
 - La release se publica en GitHub como **release normal**, no pre-release, con los ejecutables de Windows, Android y Linux, el zip del proyecto y `SHA256SUMS`.
-- Última publicada: **v0.7.3**.
+- Última publicada: **v0.7.5** (2026-10-10).
 
 ---
 
